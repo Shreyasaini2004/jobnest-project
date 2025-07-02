@@ -6,29 +6,7 @@ const bcrypt = require("bcryptjs");
 
 // Employer Signup
 router.post("/employer/signup", async (req, res) => {
-  const {
-    firstName,
-    lastName,
-    email,
-    companyName,
-    companyEmail,
-    jobTitle,
-    companyWebsite,
-    password,
-    confirmPassword
-  } = req.body;
-
-  if (password !== confirmPassword) {
-    return res.status(400).json({ error: "Passwords do not match" });
-  }
-
-  try {
-    const employerExists = await Employer.findOne({ email });
-    if (employerExists) {
-      return res.status(400).json({ error: "Email already registered" });
-    }
-
-    const employer = new Employer({
+    const {
       firstName,
       lastName,
       email,
@@ -36,16 +14,84 @@ router.post("/employer/signup", async (req, res) => {
       companyEmail,
       jobTitle,
       companyWebsite,
-      password, // NOTE: We'll hash it later!
-    });
+      password,
+      confirmPassword
+    } = req.body;
+  
+    if (password !== confirmPassword) {
+      return res.status(400).json({ error: "Passwords do not match" });
+    }
+  
+    try {
+      const employerExists = await Employer.findOne({ email });
+      if (employerExists) {
+        return res.status(400).json({ error: "Email already registered" });
+      }
+  
+      // ✅ Hash password before saving
+      const hashedPassword = await bcrypt.hash(password, 10);
+  
+      const employer = new Employer({
+        firstName,
+        lastName,
+        email,
+        companyName,
+        companyEmail,
+        jobTitle,
+        companyWebsite,
+        password: hashedPassword, // ✅ Use hashed password
+      });
+  
+      await employer.save();
+      res.status(201).json({
+        message: "Employer registered",
+        user: {
+          _id: employer._id,
+          name: `${employer.firstName} ${employer.lastName}`,
+          email: employer.email,
+          userType: "employer",
+          createdAt: employer.createdAt
+        }
+      });
+      
+    } catch (err) {
+      console.error("Signup error:", err);
+      res.status(500).json({ error: "Signup failed" });
+    }
+  });
+  
 
-    await employer.save();
-    res.status(201).json({ message: "Employer registered", employer });
-  } catch (err) {
-    console.error("Signup error:", err);
-    res.status(500).json({ error: "Signup failed" });
-  }
-});
+// Employer Login Route
+router.post("/employer/login", async (req, res) => {
+    const { email, password } = req.body;
+  
+    try {
+      const employer = await Employer.findOne({ email });
+      if (!employer) {
+        return res.status(400).json({ error: "Invalid email or password" });
+      }
+  
+      const isMatch = await bcrypt.compare(password, employer.password);
+      if (!isMatch) {
+        return res.status(400).json({ error: "Invalid email or password" });
+      }
+  
+      res.status(200).json({
+        message: "Login successful",
+        user: {
+          _id: employer._id,
+          name: employer.firstName + " " + employer.lastName,
+          email: employer.email,
+          userType: "employer",
+        },
+      });
+  
+    } catch (err) {
+      console.error("Employer Login Error:", err);
+      res.status(500).json({ error: "Login failed" });
+    }
+  });
+  
 
 // Job Seeker Signup Route
 router.post("/jobseeker/signup", async (req, res) => {
@@ -75,7 +121,17 @@ router.post("/jobseeker/signup", async (req, res) => {
       });
   
       await newJobSeeker.save();
-      res.status(201).json({ message: "Job Seeker registered successfully" });
+      res.status(201).json({
+        message: "Job Seeker registered successfully",
+        user: {
+          _id: newJobSeeker._id,
+          name: `${newJobSeeker.firstName} ${newJobSeeker.lastName}`,
+          email: newJobSeeker.email,
+          userType: "job-seeker",
+          createdAt: newJobSeeker.createdAt
+        }
+      });
+      
   
     } catch (err) {
       console.error("Signup Error:", err);

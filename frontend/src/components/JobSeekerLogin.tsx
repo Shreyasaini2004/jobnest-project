@@ -45,6 +45,8 @@ export function JobSeekerLogin() {
       });
       
       const result = await response.json();
+      console.log('Server response:', result); 
+      console.log("hello")
       if (response.ok) {
         setUser(result.user);
         toast({

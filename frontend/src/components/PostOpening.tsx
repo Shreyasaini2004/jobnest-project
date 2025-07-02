@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useUser } from "@/contexts/UserContext"; // to get the logged-in user
+import { useToast } from "@/components/ui/use-toast"; // to show success/error messages
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, MapPin, DollarSign, Clock, FileText, Users } from "lucide-react";
 
@@ -22,11 +24,51 @@ const PostOpening = () => {
     registrationFee: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const { user } = useUser(); // ✅ added
+  const { toast } = useToast(); // ✅ added
+    
+  
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Job posting data:', formData);
-    // Handle form submission
+  
+    if (!user || !user._id) {
+      console.error("User not found or missing _id");
+      return;
+    }
+  
+    const jobData = {
+      jobTitle: formData.jobTitle,           // 🛠️ was `title` — should match backend
+      jobType: formData.jobType,             // 🛠️ was `type` — should match backend
+      department: formData.department,
+      location: formData.location,
+      salaryRange: formData.salaryRange,
+      experience: formData.experience,
+      deadline: formData.deadline,
+      description: formData.description,
+      requirements: formData.requirements,
+      benefits: formData.benefits,
+      registrationFee: formData.registrationFee,
+      postedBy: user._id,
+    };
+    
+  
+    console.log("📤 Sending jobData:", jobData); // ✅ LOG THIS
+  
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/jobs/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(jobData),
+      });
+  
+      const result = await response.json();
+      console.log("✅ Job posted:", result);
+    } catch (error) {
+      console.error("❌ Job posting failed:", error);
+    }
   };
+  
+
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">

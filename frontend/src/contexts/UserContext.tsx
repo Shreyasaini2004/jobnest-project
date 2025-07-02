@@ -1,9 +1,11 @@
 import { createContext, useContext, ReactNode, useState } from 'react';
 
 interface User {
+  _id: string;
   name: string;
   email: string;
-  userType: 'job-seeker' | 'employer';
+  userType: "job-seeker" | "employer";
+  createdAt?: string;
 }
 
 interface UserContextType {

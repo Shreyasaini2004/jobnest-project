@@ -37,31 +37,47 @@ export function EmployerLogin() {
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
-      // Create a basic user object with the provided email
-      const user = {
-        id: Date.now().toString(),
-        name: data.email.split('@')[0],
-        email: data.email,
-        userType: 'employer' as const,
-        createdAt: new Date().toISOString(),
-      };
+      const apiUrl = import.meta.env.VITE_API_URL;
+      const response = await fetch(`${apiUrl}/api/auth/employer/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+  
+      const result = await response.json();
+      console.log('Server response:', result); //
+  
+      if (!response.ok) {
+        toast({
+          title: "Login Failed",
+          description: result.error || "Invalid credentials",
+          variant: "destructive",
+        });
+        return;
+      }
+  
+      const user = result.user;
       setUser(user);
+      
       toast({
         title: "Welcome!",
-        description: `Welcome, ${user.name}!`,
+        description: `Welcome, ${user.name || user.email}!`,
       });
-      navigate('/employer-dashboard');
+  
+      navigate("/employer-dashboard");
+  
     } catch (error) {
-      console.error('Login error:', error);
+      console.error("Login error:", error);
       toast({
         title: "Login Error",
-        description: "An error occurred during login. Please try again.",
+        description: "Something went wrong. Try again.",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
   };
+  
 
   return (
     <div className="px-8 pt-8">
