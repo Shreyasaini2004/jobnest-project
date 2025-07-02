@@ -38,11 +38,12 @@ export function JobSeekerLogin() {
     setIsLoading(true);
     try {
       const apiUrl = import.meta.env.VITE_API_URL;
-      const response = await fetch(`${apiUrl}/api/auth/login`, {
+      const response = await fetch(`${apiUrl}/api/auth/jobseeker/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
+      
       const result = await response.json();
       if (response.ok) {
         setUser(result.user);

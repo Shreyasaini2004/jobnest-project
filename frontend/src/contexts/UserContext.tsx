@@ -16,18 +16,33 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUserState] = useState<User | null>(() => {
-    // Load user from localStorage if available
-    const savedUser = localStorage.getItem('user');
-    return savedUser ? JSON.parse(savedUser) : null;
+    try {
+      const savedUser = localStorage.getItem('user');
+      if (!savedUser || savedUser === 'undefined') return null;
+      return JSON.parse(savedUser);
+    } catch (error) {
+      console.error("Failed to parse user from localStorage:", error);
+      localStorage.removeItem('user'); // Optional: cleanup
+      return null;
+    }
   });
+  
 
   const setUser = (userData: User) => {
-    localStorage.setItem('user', JSON.stringify(userData));
-    setUserState(userData);
+    try {
+      localStorage.setItem('user', JSON.stringify(userData));
+      setUserState(userData);
+    } catch (error) {
+      console.error("Failed to save user to localStorage:", error);
+    }
   };
 
   const logout = () => {
-    localStorage.removeItem('user');
+    try {
+      localStorage.removeItem('user');
+    } catch (error) {
+      console.error("Failed to remove user from localStorage:", error);
+    }
     setUserState(null);
   };
 

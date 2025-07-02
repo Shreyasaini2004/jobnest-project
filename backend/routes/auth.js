@@ -1,37 +1,119 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const User = require('../models/User');
+const Employer = require("../models/employer");
+const JobSeeker = require("../models/jobSeeker");
+const bcrypt = require("bcryptjs");
 
-// Register route
-router.post('/register', async (req, res) => {
+// Employer Signup
+router.post("/employer/signup", async (req, res) => {
+  const {
+    firstName,
+    lastName,
+    email,
+    companyName,
+    companyEmail,
+    jobTitle,
+    companyWebsite,
+    password,
+    confirmPassword
+  } = req.body;
+
+  if (password !== confirmPassword) {
+    return res.status(400).json({ error: "Passwords do not match" });
+  }
+
   try {
-    const { email } = req.body;
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: 'User already exists' });
+    const employerExists = await Employer.findOne({ email });
+    if (employerExists) {
+      return res.status(400).json({ error: "Email already registered" });
     }
-    // Create new user
-    const user = new User(req.body);
-    await user.save();
-    res.status(201).json({ message: 'User registered successfully', user });
+
+    const employer = new Employer({
+      firstName,
+      lastName,
+      email,
+      companyName,
+      companyEmail,
+      jobTitle,
+      companyWebsite,
+      password, // NOTE: We'll hash it later!
+    });
+
+    await employer.save();
+    res.status(201).json({ message: "Employer registered", employer });
   } catch (err) {
-    res.status(500).json({ message: 'Registration failed', error: err.message });
+    console.error("Signup error:", err);
+    res.status(500).json({ error: "Signup failed" });
   }
 });
 
-// Login route
-router.post('/login', async (req, res) => {
-  try {
+// Job Seeker Signup Route
+router.post("/jobseeker/signup", async (req, res) => {
+    const { firstName, lastName, email, password, confirmPassword } = req.body;
+  
+    if (!firstName || !lastName || !email || !password || !confirmPassword) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
+  
+    if (password !== confirmPassword) {
+      return res.status(400).json({ error: "Passwords do not match" });
+    }
+  
+    try {
+      const existingUser = await JobSeeker.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({ error: "Email already registered" });
+      }
+  
+      const hashedPassword = await bcrypt.hash(password, 10);
+  
+      const newJobSeeker = new JobSeeker({
+        firstName,
+        lastName,
+        email,
+        password: hashedPassword,
+      });
+  
+      await newJobSeeker.save();
+      res.status(201).json({ message: "Job Seeker registered successfully" });
+  
+    } catch (err) {
+      console.error("Signup Error:", err);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Job Seeker Login Route
+router.post("/jobseeker/login", async (req, res) => {
     const { email, password } = req.body;
-    const user = await User.findOne({ email });
-    if (!user || user.password !== password) {
-      return res.status(401).json({ message: 'Invalid email or password' });
-    }
-    res.json({ message: 'Login successful', user });
-  } catch (err) {
-    res.status(500).json({ message: 'Login failed', error: err.message });
-  }
-});
+  
+    try {
+      const jobSeeker = await JobSeeker.findOne({ email });
+      if (!jobSeeker) {
+        return res.status(400).json({ error: "Invalid email or password" });
+      }
+  
+      const isMatch = await bcrypt.compare(password, jobSeeker.password);
+      if (!isMatch) {
+        return res.status(400).json({ error: "Invalid email or password" });
+      }
+  
+      res.status(200).json({
+        message: "Login successful",
+        user: {
+          firstName: jobSeeker.firstName,
+          lastName: jobSeeker.lastName,
+          email: jobSeeker.email,
+          userType: "job-seeker"
+        }
+      });
+      
 
-module.exports = router; 
+  
+    } catch (err) {
+      console.error("Login Error:", err);
+      res.status(500).json({ error: "Login failed" });
+    }
+  });
+
+module.exports = router;

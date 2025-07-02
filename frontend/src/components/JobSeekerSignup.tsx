@@ -90,11 +90,17 @@ export function JobSeekerSignup({ userType }: JobSeekerSignupProps) {
           verifiedCompanyData: verifiedCompanyData,
         }),
       };
-      const response = await fetch(`${apiUrl}/api/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData),
-      });
+      const endpoint =
+      userType === 'employer'
+        ? `${apiUrl}/api/auth/employer/signup`
+        : `${apiUrl}/api/auth/jobseeker/signup`;
+
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(userData),
+        });
+    
       const result = await response.json();
       if (response.ok) {
         setUser(result.user);
