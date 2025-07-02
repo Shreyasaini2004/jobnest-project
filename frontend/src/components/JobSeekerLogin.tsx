@@ -37,31 +37,33 @@ export function JobSeekerLogin() {
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
-      // Create a basic user object with the provided email
-      const user = {
-        id: Date.now().toString(),
-        name: data.email.split('@')[0], // Use the part before @ as the username
-        email: data.email,
-        userType: 'job-seeker' as const, // Explicitly type as literal 'job-seeker'
-        createdAt: new Date().toISOString(),
-      };
-      
-      // Set user in context
-      setUser(user);
-      
-      toast({
-        title: "Welcome!",
-        description: `Welcome, ${user.name}!`,
+      const apiUrl = import.meta.env.VITE_API_URL;
+      const response = await fetch(`${apiUrl}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
       });
-      
-      // Redirect to job seeker dashboard
-      navigate('/job-seeker-dashboard');
+      const result = await response.json();
+      if (response.ok) {
+        setUser(result.user);
+        toast({
+          title: 'Welcome!',
+          description: `Welcome, ${result.user.firstName || result.user.email}!`,
+        });
+        navigate('/job-seeker-dashboard');
+      } else {
+        toast({
+          title: 'Login Error',
+          description: result.message || 'Invalid email or password.',
+          variant: 'destructive',
+        });
+      }
     } catch (error) {
       console.error('Login error:', error);
       toast({
-        title: "Login Error",
-        description: "An error occurred during login. Please try again.",
-        variant: "destructive",
+        title: 'Login Error',
+        description: 'An error occurred during login. Please try again.',
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);

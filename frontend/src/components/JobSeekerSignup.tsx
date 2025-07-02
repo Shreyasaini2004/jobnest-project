@@ -80,49 +80,44 @@ export function JobSeekerSignup({ userType }: JobSeekerSignupProps) {
   const onSubmit = async (data: SignupFormValues) => {
     try {
       setIsLoading(true);
-      
-      // Create user data object
+      const apiUrl = import.meta.env.VITE_API_URL;
+      // Prepare user data for backend
       const userData = {
-        id: Date.now().toString(),
-        name: data.firstName + ' ' + data.lastName,
-        email: data.email,
-        password: data.password, // In a real app, you should hash the password
-        userType: data.userType,
-        createdAt: new Date().toISOString(),
+        ...data,
         ...(data.userType === 'employer' && {
-          companyName: data.companyName,
-          companyEmail: data.companyEmail,
-          jobTitle: data.jobTitle,
-          companyWebsite: data.companyWebsite || '',
           companyVerified: companyVerificationStatus === 'verified',
           emailVerified: companyVerificationStatus === 'verified',
           verifiedCompanyData: verifiedCompanyData,
         }),
       };
-      
-      // Save user data to localStorage
-      localStorage.setItem('user', JSON.stringify(userData));
-      
-      // Save user data to context
-      setUser(userData);
-      
-      // Show success message
-      toast({
-        title: "Success!",
-        description: data.userType === 'employer' 
-          ? `Welcome to JobNest, ${data.firstName} ${data.lastName}! Your employer account for ${data.companyName} has been created.`
-          : `Welcome to JobNest, ${data.firstName} ${data.lastName}! Your job seeker account has been created.`,
+      const response = await fetch(`${apiUrl}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData),
       });
-      
-      // Navigate to appropriate dashboard after successful registration
-      navigate(data.userType === 'employer' ? '/employer-dashboard' : '/job-seeker-dashboard');
-      
+      const result = await response.json();
+      if (response.ok) {
+        setUser(result.user);
+        toast({
+          title: 'Success!',
+          description: data.userType === 'employer'
+            ? `Welcome to JobNest, ${data.firstName} ${data.lastName}! Your employer account for ${data.companyName} has been created.`
+            : `Welcome to JobNest, ${data.firstName} ${data.lastName}! Your job seeker account has been created.`,
+        });
+        navigate(data.userType === 'employer' ? '/employer-dashboard' : '/job-seeker-dashboard');
+      } else {
+        toast({
+          title: 'Registration Failed',
+          description: result.message || 'An error occurred during registration.',
+          variant: 'destructive',
+        });
+      }
     } catch (error) {
       console.error('Registration error:', error);
       toast({
-        title: "Registration Failed",
-        description: "An error occurred during registration. Please try again.",
-        variant: "destructive",
+        title: 'Registration Failed',
+        description: 'An error occurred during registration. Please try again.',
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);

@@ -1,8 +1,18 @@
-
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, MessageSquare, Shield, BarChart3, Users, Zap } from "lucide-react";
+import { useEffect, useState } from 'react';
 
 const AboutSection = () => {
+  const [apiMessage, setApiMessage] = useState('');
+
+  useEffect(() => {
+    const apiUrl = import.meta.env.VITE_API_URL;
+    fetch(`${apiUrl}/api/hello`)
+      .then(res => res.json())
+      .then(data => setApiMessage(data.message))
+      .catch(() => setApiMessage('Could not connect to backend.'));
+  }, []);
+
   const features = [
     {
       icon: Search,
@@ -74,6 +84,10 @@ const AboutSection = () => {
               </Card>
             ))}
           </div>
+        </div>
+
+        <div style={{ marginTop: '1rem', color: 'green' }}>
+          Backend says: {apiMessage}
         </div>
       </div>
     </section>
