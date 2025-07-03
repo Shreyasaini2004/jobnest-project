@@ -135,14 +135,15 @@ export default function ProfilePage() {
         >
           {form.avatar ? (
             <>
+              // In the img tag where you display the avatar, update the src attribute:
+              
               <img
-                src={form.avatar.startsWith('http') ? form.avatar : `${backendUrl}${form.avatar}`}
+                src={form.avatar} // Cloudinary URLs are already complete, no need to prepend backendUrl
                 alt="Profile"
                 className="object-cover w-full h-full rounded-full"
-                onLoad={() => console.log('Image loaded successfully:', form.avatar.startsWith('http') ? form.avatar : `${backendUrl}${form.avatar}`)}
+                onLoad={() => console.log('Image loaded successfully:', form.avatar)}
                 onError={(e) => {
                   console.error('Image failed to load:', form.avatar);
-                  console.error('Full image URL:', form.avatar.startsWith('http') ? form.avatar : `${backendUrl}${form.avatar}`);
                   e.currentTarget.onerror = null; // Prevent infinite loop
                   e.currentTarget.src = ''; // Clear the src
                   // Fall back to initials

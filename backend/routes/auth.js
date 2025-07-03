@@ -233,6 +233,11 @@ router.post('/test-upload', upload.single('testFile'), (req, res) => {
   res.json({ success: true, fileUrl });
 });
 
+// Import cloudinary at the top of the file
+const cloudinary = require('../config/cloudinary');
+// Remove this line as fs is already declared at the top of the file
+// const fs = require('fs');
+
 // Avatar upload endpoint (supports both Job Seeker and Employer)
 router.post('/users/upload-avatar', upload.single('avatar'), async (req, res) => {
   console.log('Avatar upload request received');
@@ -253,21 +258,21 @@ router.post('/users/upload-avatar', upload.single('avatar'), async (req, res) =>
       return res.status(400).json({ error: 'No file uploaded' });
     }
     
-    console.log('File uploaded successfully:', req.file.filename);
-    console.log('File details:', {
-      fieldname: req.file.fieldname,
-      originalname: req.file.originalname,
-      encoding: req.file.encoding,
-      mimetype: req.file.mimetype,
-      destination: req.file.destination,
-      filename: req.file.filename,
-      path: req.file.path,
-      size: req.file.size
+    // Upload to Cloudinary
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: 'jobnest/avatars',
+      use_filename: true,
+      unique_filename: true,
     });
     
-    // Full URL to the uploaded file
-    const avatarUrl = `/uploads/${req.file.filename}`;
-    console.log('Avatar URL:', avatarUrl);
+    console.log('Cloudinary upload result:', result);
+    
+    // Delete the local file after uploading to Cloudinary
+    fs.unlinkSync(req.file.path);
+    
+    // Get the Cloudinary URL
+    const avatarUrl = result.secure_url;
+    console.log('Cloudinary Avatar URL:', avatarUrl);
     
     // Try to update JobSeeker first
     console.log('Attempting to update JobSeeker with ID:', userId);
