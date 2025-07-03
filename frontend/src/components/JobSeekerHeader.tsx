@@ -1,34 +1,15 @@
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
-import { User, Settings, LogOut, Eye } from "lucide-react";
+import { User, Settings, Bell } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useUser } from "@/contexts/UserContext";
 import { useNavigate } from "react-router-dom";
 
 const JobSeekerHeader = () => {
-  const { user, logout } = useUser();
+  const { user } = useUser();
   const navigate = useNavigate();
-  const currentStatus = "Pending"; // This would come from user data
   const userName = user?.name || "User";
-
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'approved':
-        return 'bg-job-success text-white';
-      case 'pending':
-        return 'bg-yellow-500 text-white';
-      case 'rejected':
-        return 'bg-red-500 text-white';
-      default:
-        return 'bg-gray-500 text-white';
-    }
-  };
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+  const userInitials = userName.split(' ').map(name => name[0]).join('').toUpperCase();
+  const unreadNotifications = 2; // Example: replace with real count if available
 
   return (
     <header className="w-full bg-gradient-to-r from-background via-job-secondary/20 to-background border-b border-border/50 p-6 shadow-sm">
@@ -44,32 +25,39 @@ const JobSeekerHeader = () => {
             </p>
           </div>
         </div>
-        <div className="flex items-center space-x-4">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative hover:bg-job-primary/10">
-                <User className="h-5 w-5" />
-                <Badge className={`absolute -top-1 -right-1 h-3 w-3 p-0 ${getStatusColor(currentStatus)}`} />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 bg-background border border-border/50 shadow-lg">
-              <DropdownMenuLabel className="font-semibold">Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="flex items-center space-x-2 cursor-pointer hover:bg-job-primary/5" onClick={() => navigate('/profile')}>
-                <Eye className="h-4 w-4" />
-                <span>View Profile</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="flex items-center space-x-2 cursor-pointer hover:bg-job-primary/5" onClick={() => navigate('/settings')}>
-                <Settings className="h-4 w-4" />
-                <span>Settings</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="flex items-center space-x-2 cursor-pointer hover:bg-red-50 text-red-600" onClick={handleLogout}>
-                <LogOut className="h-4 w-4" />
-                <span>Logout</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        <div className="flex items-center gap-4">
+          {/* Notification Bell */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative rounded-full bg-white shadow hover:bg-blue-100 transition-colors h-11 w-11 flex items-center justify-center focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2"
+            aria-label="Notifications"
+          >
+            <Bell className="h-6 w-6 text-blue-500" />
+            {unreadNotifications > 0 && (
+              <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500 border-2 border-white" aria-label="Unread notifications"></span>
+            )}
+          </Button>
+          {/* Profile Avatar */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative rounded-full bg-white shadow hover:scale-105 transition-transform h-11 w-11 flex items-center justify-center text-lg font-bold text-blue-500 focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2"
+            onClick={() => navigate('/profile')}
+            aria-label="Profile"
+          >
+            {userInitials}
+          </Button>
+          {/* Settings Icon */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full bg-white shadow hover:bg-blue-100 transition-colors h-11 w-11 flex items-center justify-center focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2"
+            onClick={() => navigate('/settings')}
+            aria-label="Settings"
+          >
+            <Settings className="h-6 w-6 text-blue-500" />
+          </Button>
         </div>
       </div>
     </header>

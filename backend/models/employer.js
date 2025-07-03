@@ -12,7 +12,8 @@ const employerSchema = new mongoose.Schema({
   role: {
     type: String,
     default: "employer"
-  }
+  },
+  avatar: String // URL or path to profile image
 }, { timestamps: true });
 
 module.exports = mongoose.model("Employer", employerSchema);

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test File Upload</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            display: none;
+        }
+        img {
+            max-width: 100%;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test File Upload</h1>
+    
+    <div class="form-group">
+        <h2>Test Simple Upload</h2>
+        <form id="testUploadForm">
+            <div class="form-group">
+                <label for="testFile">Select File:</label>
+                <input type="file" id="testFile" name="testFile">
+            </div>
+            <button type="submit">Upload Test File</button>
+        </form>
+    </div>
+
+    <div class="form-group">
+        <h2>Test Avatar Upload</h2>
+        <form id="avatarUploadForm">
+            <div class="form-group">
+                <label for="avatar">Select Avatar:</label>
+                <input type="file" id="avatar" name="avatar">
+            </div>
+            <div class="form-group">
+                <label for="userId">User ID:</label>
+                <input type="text" id="userId" name="userId" placeholder="Enter user ID">
+            </div>
+            <button type="submit">Upload Avatar</button>
+        </form>
+    </div>
+
+    <div id="result">
+        <h3>Result:</h3>
+        <pre id="resultContent"></pre>
+        <div id="imagePreview"></div>
+    </div>
+
+    <script>
+        const backendUrl = 'http://localhost:5000';
+        
+        // Test Upload Form
+        document.getElementById('testUploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData();
+            const fileInput = document.getElementById('testFile');
+            
+            if (!fileInput.files[0]) {
+                alert('Please select a file');
+                return;
+            }
+            
+            formData.append('testFile', fileInput.files[0]);
+            
+            try {
+                const response = await fetch(`${backendUrl}/api/auth/test-upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                displayResult(result);
+                
+                if (result.success && result.fileUrl) {
+                    displayImage(result.fileUrl);
+                }
+            } catch (error) {
+                displayResult({ error: error.message });
+            }
+        });
+        
+        // Avatar Upload Form
+        document.getElementById('avatarUploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData();
+            const fileInput = document.getElementById('avatar');
+            const userIdInput = document.getElementById('userId');
+            
+            if (!fileInput.files[0]) {
+                alert('Please select a file');
+                return;
+            }
+            
+            if (!userIdInput.value) {
+                alert('Please enter a user ID');
+                return;
+            }
+            
+            formData.append('avatar', fileInput.files[0]);
+            formData.append('userId', userIdInput.value);
+            
+            try {
+                const response = await fetch(`${backendUrl}/api/auth/users/upload-avatar`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                displayResult(result);
+                
+                if (result.avatar) {
+                    displayImage(result.avatar);
+                }
+            } catch (error) {
+                displayResult({ error: error.message });
+            }
+        });
+        
+        function displayResult(data) {
+            const resultDiv = document.getElementById('result');
+            const resultContent = document.getElementById('resultContent');
+            
+            resultDiv.style.display = 'block';
+            resultContent.textContent = JSON.stringify(data, null, 2);
+        }
+        
+        function displayImage(url) {
+            const imagePreview = document.getElementById('imagePreview');
+            imagePreview.innerHTML = '';
+            
+            const fullUrl = url.startsWith('http') ? url : `${backendUrl}${url}`;
+            const img = document.createElement('img');
+            img.src = fullUrl;
+            img.alt = 'Uploaded Image';
+            
+            imagePreview.appendChild(img);
+        }
+    </script>
+</body>
+</html>

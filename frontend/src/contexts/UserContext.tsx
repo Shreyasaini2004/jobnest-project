@@ -6,6 +6,15 @@ interface User {
   email: string;
   userType: "job-seeker" | "employer";
   createdAt?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  location?: string;
+  experience?: string;
+  education?: string;
+  skills?: string;
+  bio?: string;
+  avatar?: string;
 }
 
 interface UserContextType {

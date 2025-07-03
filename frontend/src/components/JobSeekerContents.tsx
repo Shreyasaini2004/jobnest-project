@@ -4,14 +4,17 @@ import ManageApplications from "@/components/ManageApplications";
 import SavedJobs from "@/components/SavedJobs";
 import ATSScoreAnalysis from "./ATSScoreAnalysis";
 import SavedATSAnalyses from "./SavedATSAnalyses";
+import DashboardHome from "./DashboardHome";
 
 interface JobSeekerContentProps {
-  activeSection: 'update-details' | 'view-openings' | 'manage-applications' | 'saved-jobs' | 'ats-score' | 'saved-analyses';
+  activeSection: 'dashboard-home' | 'update-details' | 'view-openings' | 'manage-applications' | 'saved-jobs' | 'ats-score' | 'saved-analyses';
 }
 
 const JobSeekerContent = ({ activeSection }: JobSeekerContentProps) => {
   const renderContent = () => {
     switch (activeSection) {
+      case 'dashboard-home':
+        return <DashboardHome />;
       case 'update-details':
         return <UpdateDetailsForm />;
       case 'view-openings':
@@ -25,7 +28,7 @@ const JobSeekerContent = ({ activeSection }: JobSeekerContentProps) => {
       case 'saved-analyses':
         return <SavedATSAnalyses />;
       default:
-        return <UpdateDetailsForm />;
+        return <DashboardHome />;
     }
   };
 
