@@ -15,6 +15,8 @@ import { ATSAnalysisProvider } from "./contexts/ATSAnalysisContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 import ProfilePage from "./pages/Profile";
 import SettingsPage from "./pages/Settings";
+import SearchResults from "./pages/SearchResults";
+import JobDetails from "./pages/JobDetails";
 
 const App = () => (
   <ErrorBoundary>
@@ -34,6 +36,8 @@ const App = () => (
                   <Route path="/employer-dashboard" element={<EmployerDashboard />} />
                   <Route path="/profile" element={<ProfilePage />} />
                   <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="/search" element={<SearchResults />} />
+                  <Route path="/jobs/:jobId" element={<JobDetails />} />
                   {/* Redirect old route to new one */}
                   <Route path="/job-seeker-dashboard" element={<Navigate to="/dashboard" replace />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

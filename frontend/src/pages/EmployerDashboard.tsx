@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import EmployerSidebar from "@/components/EmployerSidebar";
@@ -7,9 +6,13 @@ import PostOpening from "@/components/PostOpening";
 import ViewApplications from "@/components/ViewApplications";
 import ViewStatus from "@/components/ViewStatus";
 import CalendarEvents from "@/components/CalendarEvents";
+import CreateEvent from "@/components/CreateEvent";
+import MyEvents from "@/components/MyEvents";
 
 const EmployerDashboard = () => {
-  const [activeSection, setActiveSection] = useState<'post-opening' | 'view-applications' | 'view-status' | 'calendar-events'>('post-opening');
+  const [activeSection, setActiveSection] = useState<
+    'post-opening' | 'view-applications' | 'view-status' | 'calendar-events' | 'create-event' | 'my-events'
+  >('post-opening');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
@@ -23,6 +26,8 @@ const EmployerDashboard = () => {
               {activeSection === 'view-applications' && <ViewApplications />}
               {activeSection === 'view-status' && <ViewStatus />}
               {activeSection === 'calendar-events' && <CalendarEvents />}
+              {activeSection === 'create-event' && <CreateEvent />}
+              {activeSection === 'my-events' && <MyEvents />}
             </main>
           </div>
         </div>

@@ -42,13 +42,22 @@ export function JobSeekerLogin() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
+        credentials: 'include', // Important for cookies
       });
       
       const result = await response.json();
-      console.log('Server response:', result); 
-      console.log("hello")
+      console.log('Server response:', result);
+      
       if (response.ok) {
-        setUser(result.user);
+        // Ensure the user object has the name property set correctly
+        const userData = {
+          ...result.user,
+          name: result.user.firstName && result.user.lastName 
+            ? `${result.user.firstName} ${result.user.lastName}` 
+            : result.user.name || result.user.email
+        };
+        console.log('Setting user data on login:', userData);
+        setUser(userData);
         toast({
           title: 'Welcome!',
           description: `Welcome, ${result.user.firstName || result.user.email}!`,
@@ -57,7 +66,7 @@ export function JobSeekerLogin() {
       } else {
         toast({
           title: 'Login Error',
-          description: result.message || 'Invalid email or password.',
+          description: result.error || 'Invalid email or password.',
           variant: 'destructive',
         });
       }

@@ -1,15 +1,17 @@
 import { JobSeekerLogin } from '@/components/JobSeekerLogin';
 import { EmployerLogin } from '@/components/EmployerLogin';
 import { Button } from "@/components/ui/button";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from 'react';
 import { User, Briefcase } from 'lucide-react';
 
 export default function LoginPage() {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
+  const redirect = params.get("redirect");
   const initialTab = params.get('tab') === 'employer' ? 'employer' : 'job-seeker';
   const [tab, setTab] = useState<'job-seeker' | 'employer'>(initialTab);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const paramTab = params.get('tab');
@@ -17,6 +19,14 @@ export default function LoginPage() {
     if (paramTab === 'job-seeker' && tab !== 'job-seeker') setTab('job-seeker');
     // eslint-disable-next-line
   }, [location.search]);
+
+  const handleLogin = () => {
+    if (redirect) {
+      navigate(redirect);
+    } else {
+      navigate("/dashboard");
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">

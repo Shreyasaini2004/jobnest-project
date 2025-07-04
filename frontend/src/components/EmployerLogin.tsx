@@ -42,10 +42,11 @@ export function EmployerLogin() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
+        credentials: 'include', // Important for cookies
       });
   
       const result = await response.json();
-      console.log('Server response:', result); //
+      console.log('Server response:', result);
   
       if (!response.ok) {
         toast({
@@ -168,4 +169,4 @@ export function EmployerLogin() {
       </CardContent>
     </div>
   );
-} 
+}

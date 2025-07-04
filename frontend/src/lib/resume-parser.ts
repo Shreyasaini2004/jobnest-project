@@ -240,10 +240,10 @@ export class ResumeParser {
     'social media marketing': ['social media', 'social marketing', 'facebook ads', 'instagram ads'],
     
     // Version Control & Collaboration - Enhanced
-    'git flow': ['gitflow', 'git workflow', 'feature branches', 'release branches'],
-    'trunk based development': ['trunk development', 'mainline development'],
-    'code review': ['peer review', 'code inspection', 'pull request review', 'pr review'],
-    'pair programming': ['pair coding', 'paired programming', 'pair development', 'mob programming'],
+    'git_flow': ['gitflow', 'git workflow', 'feature branches', 'release branches'],
+    'trunk_based_development': ['trunk development', 'mainline development'],
+    'code_review': ['peer review', 'code inspection', 'pull request review', 'pr review'],
+    'pair_programming': ['pair coding', 'paired programming', 'pair development', 'mob programming'],
     
     // Testing & Quality Assurance - Enhanced
     'unit testing': ['unit tests', 'junit', 'jest', 'mocha', 'pytest'],
@@ -292,8 +292,8 @@ export class ResumeParser {
     'trello': ['project management', 'kanban boards', 'task management'],
     'asana': ['project management', 'team collaboration', 'work management'],
     'notion': ['workspace', 'documentation', 'knowledge management'],
-    'confluence': ['documentation', 'knowledge base', 'team collaboration'],
-    'jira': ['project management', 'issue tracking', 'agile development'],
+    'confluence_tool': ['documentation', 'knowledge base', 'team collaboration'],
+    'jira_tool': ['project management', 'issue tracking', 'agile development'],
     'monday.com': ['work management', 'project tracking', 'team collaboration']
   };
 
@@ -406,7 +406,7 @@ export class ResumeParser {
     
     // Methodologies
     'agile', 'scrum', 'kanban', 'waterfall', 'devops', 'ci/cd', 'tdd', 'bdd', 'pair programming',
-    'code review', 'version control', 'git flow', 'trunk based development',
+    'code review', 'version control', 'git_flow', 'trunk_based_development',
     
     // Soft Skills
     'leadership', 'communication', 'teamwork', 'problem solving', 'critical thinking', 'analytical',
@@ -1974,4 +1974,4 @@ E-commerce Platform | React, Node.js, MongoDB
     
     return Math.min(15, count * 2); // Max 15% bonus
   }
-} 
+}

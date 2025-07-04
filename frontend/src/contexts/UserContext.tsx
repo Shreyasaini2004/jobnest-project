@@ -1,26 +1,14 @@
-import { createContext, useContext, ReactNode, useState } from 'react';
-
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-  userType: "job-seeker" | "employer";
-  createdAt?: string;
-  firstName?: string;
-  lastName?: string;
-  phone?: string;
-  location?: string;
-  experience?: string;
-  education?: string;
-  skills?: string;
-  bio?: string;
-  avatar?: string;
-}
+import { createContext, useContext, ReactNode, useState, useEffect } from 'react';
+import { userApi } from '@/lib/userApi';
+import { User } from '@/types/user';
+import axios from '@/lib/axios';
 
 interface UserContextType {
   user: User | null;
   setUser: (user: User) => void;
   logout: () => void;
+  refreshUserData: () => Promise<void>;
+  isLoading: boolean;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -38,6 +26,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   });
   
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  
 
   const setUser = (userData: User) => {
     try {
@@ -48,17 +38,47 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
     try {
+      // Call the appropriate logout endpoint based on user type
+      if (user?.userType === 'employer') {
+        await axios.post('/api/auth/employer/logout');
+      } else if (user?.userType === 'job-seeker') {
+        await axios.post('/api/auth/jobseeker/logout');
+      }
       localStorage.removeItem('user');
     } catch (error) {
-      console.error("Failed to remove user from localStorage:", error);
+      console.error("Failed to logout:", error);
     }
     setUserState(null);
   };
 
+  // Function to refresh user data from the backend
+  const refreshUserData = async (): Promise<void> => {
+    if (!user || !user._id || !user.userType) return;
+    
+    setIsLoading(true);
+    try {
+      const userData = await userApi.getCurrentUser(user._id, user.userType);
+      if (userData) {
+        setUser(userData);
+      }
+    } catch (error) {
+      console.error("Failed to refresh user data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch user data when component mounts if user exists
+  useEffect(() => {
+    if (user && user._id) {
+      refreshUserData();
+    }
+  }, [user?._id]);
+
   return (
-    <UserContext.Provider value={{ user, setUser, logout }}>
+    <UserContext.Provider value={{ user, setUser, logout, refreshUserData, isLoading }}>
       {children}
     </UserContext.Provider>
   );
@@ -70,4 +90,20 @@ export function useUser() {
     throw new Error('useUser must be used within a UserProvider');
   }
   return context;
+}
+
+export function logout() {
+  // Use the context if available
+  try {
+    const context = useContext(UserContext);
+    if (context && typeof context.logout === 'function') {
+      context.logout();
+    } else {
+      // Fallback: clear user from localStorage
+      localStorage.removeItem('user');
+    }
+  } catch {
+    // Fallback: clear user from localStorage
+    localStorage.removeItem('user');
+  }
 }

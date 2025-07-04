@@ -1,11 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { eventApi } from '@/lib/api';
+import { eventApi } from '@/lib/eventApi';
 
 export interface Event {
   id: string;
   title: string;
   date: Date;
-  type: 'job-fair' | 'webinar';
+  type: 'job-fair' | 'webinar' | 'other';
   meetingLink?: string;
   description?: string;
 }

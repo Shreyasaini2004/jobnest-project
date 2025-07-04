@@ -1,47 +1,117 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Building, MapPin, Clock, Eye, MessageSquare } from "lucide-react";
+import { Calendar, Building, MapPin, Clock, Eye, MessageSquare, Loader2 } from "lucide-react";
+import { applicationApi } from "@/lib/applicationApi";
+import { useUser } from "@/contexts/UserContext";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 const ManageApplications = () => {
-  const applications = [
-    {
-      id: 1,
-      jobTitle: "Frontend Developer",
-      company: "Tech Corp",
-      location: "New York, NY",
-      appliedDate: "2024-01-15",
-      status: "Under Review",
-      lastUpdate: "2 days ago",
-    },
-    {
-      id: 2,
-      jobTitle: "UX Designer",
-      company: "Design Studio",
-      location: "San Francisco, CA",
-      appliedDate: "2024-01-10",
-      status: "Interview Scheduled",
-      lastUpdate: "1 week ago",
-    },
-    {
-      id: 3,
-      jobTitle: "Full Stack Developer",
-      company: "StartupXYZ",
-      location: "Austin, TX",
-      appliedDate: "2024-01-20",
-      status: "Applied",
-      lastUpdate: "3 days ago",
-    },
-    {
-      id: 4,
-      jobTitle: "Product Manager",
-      company: "Innovation Labs",
-      location: "Seattle, WA",
-      appliedDate: "2024-01-08",
-      status: "Rejected",
-      lastUpdate: "5 days ago",
-    },
-  ];
+  const [applications, setApplications] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { user } = useUser();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  
+  useEffect(() => {
+    const fetchApplications = async () => {
+      if (!user) {
+        setError("You must be logged in to view your applications");
+        setIsLoading(false);
+        return;
+      }
+      
+      if (user.userType !== "job-seeker") {
+        setError("Only job seekers can view applications");
+        setIsLoading(false);
+        return;
+      }
+      
+      try {
+        const jobSeekerId = user._id;
+        const data = await applicationApi.getJobSeekerApplications(jobSeekerId);
+        
+        // Transform the data to match our component's expected format
+        const formattedApplications = data.map((app: any) => ({
+          id: app._id,
+          jobTitle: app.job?.jobTitle || "Unknown Position",
+          company: app.job?.postedBy?.companyName || "Unknown Company",
+          location: app.job?.location || "Remote",
+          appliedDate: app.createdAt,
+          status: app.status.charAt(0).toUpperCase() + app.status.slice(1), // Capitalize first letter
+          lastUpdate: formatTimeAgo(app.updatedAt || app.createdAt),
+          jobId: app.job?._id
+        }));
+        
+        setApplications(formattedApplications);
+      } catch (err) {
+        console.error("Error fetching applications:", err);
+        setError("Failed to load your applications. Please try again later.");
+        
+        // Fallback to mock data in development
+        if (process.env.NODE_ENV === 'development') {
+          setApplications([
+            {
+              id: 1,
+              jobTitle: "Frontend Developer",
+              company: "Tech Corp",
+              location: "New York, NY",
+              appliedDate: "2024-01-15",
+              status: "Under Review",
+              lastUpdate: "2 days ago",
+            },
+            {
+              id: 2,
+              jobTitle: "UX Designer",
+              company: "Design Studio",
+              location: "San Francisco, CA",
+              appliedDate: "2024-01-10",
+              status: "Interview Scheduled",
+              lastUpdate: "1 week ago",
+            },
+            {
+              id: 3,
+              jobTitle: "Full Stack Developer",
+              company: "StartupXYZ",
+              location: "Austin, TX",
+              appliedDate: "2024-01-20",
+              status: "Applied",
+              lastUpdate: "3 days ago",
+            },
+          ]);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchApplications();
+  }, [user]);
+  
+  // Helper function to format time ago
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) {
+      return 'Today';
+    } else if (diffDays === 1) {
+      return 'Yesterday';
+    } else if (diffDays < 7) {
+      return `${diffDays} days ago`;
+    } else if (diffDays < 30) {
+      const weeks = Math.floor(diffDays / 7);
+      return `${weeks} ${weeks === 1 ? 'week' : 'weeks'} ago`;
+    } else {
+      const months = Math.floor(diffDays / 30);
+      return `${months} ${months === 1 ? 'month' : 'months'} ago`;
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -73,6 +143,52 @@ const ManageApplications = () => {
     }
   };
 
+  // Handle loading state
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <Loader2 className="h-12 w-12 animate-spin text-job-primary mb-4" />
+        <p className="text-lg text-muted-foreground">Loading your applications...</p>
+      </div>
+    );
+  }
+
+  // Handle error state
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-6xl mb-4">⚠️</div>
+        <h3 className="text-xl font-semibold text-foreground mb-2">Something went wrong</h3>
+        <p className="text-muted-foreground mb-6">{error}</p>
+        <Button 
+          className="bg-job-primary hover:bg-job-primary/90"
+          onClick={() => navigate('/search')}
+        >
+          Browse Jobs
+        </Button>
+      </div>
+    );
+  }
+
+  // Handle no user state
+  if (!user) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-6xl mb-4">🔒</div>
+        <h3 className="text-xl font-semibold text-foreground mb-2">Sign in required</h3>
+        <p className="text-muted-foreground mb-6">
+          Please sign in to view your job applications.
+        </p>
+        <Button 
+          className="bg-job-primary hover:bg-job-primary/90"
+          onClick={() => navigate('/login')}
+        >
+          Sign In
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       {/* Welcome Section */}
@@ -91,25 +207,25 @@ const ManageApplications = () => {
         <Card className="border-border/50 bg-gradient-to-br from-blue-50 to-blue-100/50">
           <CardContent className="p-6 text-center">
             <div className="text-3xl font-bold text-blue-600">
-              {applications.filter(app => app.status === 'Applied').length}
+              {applications.filter(app => app.status.toLowerCase() === 'pending').length}
             </div>
-            <div className="text-sm text-muted-foreground">Applied</div>
+            <div className="text-sm text-muted-foreground">Pending</div>
           </CardContent>
         </Card>
         <Card className="border-border/50 bg-gradient-to-br from-yellow-50 to-yellow-100/50">
           <CardContent className="p-6 text-center">
             <div className="text-3xl font-bold text-yellow-600">
-              {applications.filter(app => app.status === 'Under Review').length}
+              {applications.filter(app => app.status.toLowerCase() === 'reviewed').length}
             </div>
-            <div className="text-sm text-muted-foreground">Under Review</div>
+            <div className="text-sm text-muted-foreground">Reviewed</div>
           </CardContent>
         </Card>
         <Card className="border-border/50 bg-gradient-to-br from-green-50 to-green-100/50">
           <CardContent className="p-6 text-center">
             <div className="text-3xl font-bold text-green-600">
-              {applications.filter(app => app.status === 'Interview Scheduled').length}
+              {applications.filter(app => app.status.toLowerCase() === 'shortlisted').length}
             </div>
-            <div className="text-sm text-muted-foreground">Interviews</div>
+            <div className="text-sm text-muted-foreground">Shortlisted</div>
           </CardContent>
         </Card>
         <Card className="border-border/50 bg-gradient-to-br from-job-primary/10 to-job-accent/10">
@@ -168,9 +284,14 @@ const ManageApplications = () => {
                     </div>
                   </div>
                   <div className="flex space-x-2">
-                    <Button variant="outline" size="sm" className="border-job-primary/20 hover:bg-job-primary/5">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="border-job-primary/20 hover:bg-job-primary/5"
+                      onClick={() => navigate(`/jobs/${application.jobId}`)}
+                    >
                       <Eye className="h-4 w-4 mr-1" />
-                      View
+                      View Job
                     </Button>
                     <Button variant="outline" size="sm" className="border-job-success/20 hover:bg-job-success/5">
                       <MessageSquare className="h-4 w-4 mr-1" />
@@ -191,7 +312,10 @@ const ManageApplications = () => {
           <p className="text-muted-foreground mb-6">
             Start applying to jobs to track your progress here.
           </p>
-          <Button className="bg-job-primary hover:bg-job-primary/90">
+          <Button 
+            className="bg-job-primary hover:bg-job-primary/90"
+            onClick={() => navigate('/search')}
+          >
             Browse Jobs
           </Button>
         </div>

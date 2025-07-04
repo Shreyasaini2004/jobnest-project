@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { User, Settings, Bell } from "lucide-react";
-import { SidebarTrigger } from "@/components/ui/sidebar";
+// import { SidebarTrigger } from "@/components/ui/sidebar"; // Removed
 import { useUser } from "@/contexts/UserContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 const JobSeekerHeader = () => {
   const { user } = useUser();
@@ -15,7 +15,7 @@ const JobSeekerHeader = () => {
     <header className="w-full bg-gradient-to-r from-background via-job-secondary/20 to-background border-b border-border/50 p-6 shadow-sm">
       <div className="flex justify-between items-center">
         <div className="flex items-center space-x-4">
-          <SidebarTrigger className="hover:bg-job-primary/10 p-2 rounded-lg transition-colors" />
+          {/* <SidebarTrigger className="hover:bg-job-primary/10 p-2 rounded-lg transition-colors" /> */}
           <div>
             <h1 className="text-3xl font-bold text-foreground mb-1">
               Welcome back, {userName}!

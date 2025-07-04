@@ -8,6 +8,8 @@ import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { jobApi } from '@/lib/realApi';
+import { useUser } from '@/contexts/UserContext';
 
 // Define the form schema using Zod
 const applicationSchema = z.object({
@@ -53,20 +55,41 @@ const JobApplicationForm: React.FC<JobApplicationFormProps> = ({
 }) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const { user } = useUser();
   
-  // Mock function for applying to jobs
+  // Function for applying to jobs using real API
   const applyToJob = async (data: { jobId: string; application: any }) => {
+    if (!user || user.userType !== 'job-seeker') {
+      toast({
+        title: 'Authentication Required',
+        description: 'You must be logged in as a job seeker to apply for jobs.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Add the job seeker ID to the application data
+      const applicationData = {
+        ...data.application,
+        jobSeekerId: user._id
+      };
       
-      toast({
-        title: 'Application Submitted',
-        description: 'Your application has been submitted successfully!',
-      });
-      if (onSuccess) onSuccess();
+      // Call the real API
+      const success = await jobApi.applyForJob(data.jobId, applicationData);
+      
+      if (success) {
+        toast({
+          title: 'Application Submitted',
+          description: 'Your application has been submitted successfully!',
+        });
+        if (onSuccess) onSuccess();
+      } else {
+        throw new Error('Application submission failed');
+      }
     } catch (error) {
+      console.error('Error applying for job:', error);
       toast({
         title: 'Application Failed',
         description: 'There was an error submitting your application. Please try again.',

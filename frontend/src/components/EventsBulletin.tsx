@@ -1,16 +1,37 @@
 import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Calendar, Loader2, Video, Users, GraduationCap, ExternalLink, Clock } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, Loader2, Video, Users, GraduationCap, ExternalLink, Clock, CheckCircle, UserPlus, BookOpen } from 'lucide-react';
 import { useEvents, Event } from '@/contexts/EventContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { format, isToday, isTomorrow, isSameDay } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
+import { useUser } from "@/contexts/UserContext";
 
 const EventsBulletin = () => {
   const { events } = useEvents();
   const [scrollPosition, setScrollPosition] = useState(0);
   const [visibleEvents, setVisibleEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [registeredEvents, setRegisteredEvents] = useState<Set<string>>(new Set());
+  const [registrationLoading, setRegistrationLoading] = useState<string | null>(null);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const { user } = useUser();
+
+  // Load registered events from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('registeredEvents');
+    if (saved) {
+      setRegisteredEvents(new Set(JSON.parse(saved)));
+    }
+  }, []);
+
+  // Save registered events to localStorage
+  const saveRegisteredEvents = (events: Set<string>) => {
+    localStorage.setItem('registeredEvents', JSON.stringify([...events]));
+  };
 
   // Update visible events based on scroll position
   useEffect(() => {
@@ -56,6 +77,47 @@ const EventsBulletin = () => {
       ? 'from-blue-500 to-blue-600' 
       : 'from-purple-500 to-purple-600';
   };
+
+  const handleEventRegistration = async (eventId: string, eventTitle: string) => {
+    if (!user) {
+      toast({
+        title: "Sign In Required",
+        description: "Please sign in to register for events.",
+        variant: "destructive",
+      });
+      setTimeout(() => navigate('/login'), 800);
+      return;
+    }
+    setRegistrationLoading(eventId);
+    
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    const newRegisteredEvents = new Set(registeredEvents);
+    if (newRegisteredEvents.has(eventId)) {
+      newRegisteredEvents.delete(eventId);
+      setRegisteredEvents(newRegisteredEvents);
+      saveRegisteredEvents(newRegisteredEvents);
+      toast({
+        title: "Registration Cancelled",
+        description: `You've cancelled your registration for "${eventTitle}"`,
+        variant: "default",
+      });
+    } else {
+      newRegisteredEvents.add(eventId);
+      setRegisteredEvents(newRegisteredEvents);
+      saveRegisteredEvents(newRegisteredEvents);
+      toast({
+        title: "Successfully Registered!",
+        description: `You're now registered for "${eventTitle}". We'll send you a reminder before the event.`,
+        variant: "default",
+      });
+    }
+    
+    setRegistrationLoading(null);
+  };
+
+  const isRegistered = (eventId: string) => registeredEvents.has(eventId);
 
   return (
     <section className="py-12 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -130,7 +192,11 @@ const EventsBulletin = () => {
                 <p className="text-slate-500 mb-4">
                   We're working on bringing you amazing events. Check back soon!
                 </p>
-                <Button variant="outline" className="rounded-full">
+                <Button 
+                  variant="outline" 
+                  className="rounded-full"
+                  onClick={() => navigate('/dashboard?tab=events')}
+                >
                   Get Notified
                 </Button>
               </div>
@@ -143,6 +209,16 @@ const EventsBulletin = () => {
               >
                 {/* Event Type Indicator */}
                 <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${getEventTypeGradient(event.type)}`} />
+                
+                {/* Registration Status Badge */}
+                {isRegistered(event.id) && (
+                  <div className="absolute top-4 right-4 z-10">
+                    <Badge className="bg-green-500 text-white text-xs px-2 py-1 flex items-center gap-1">
+                      <CheckCircle className="h-3 w-3" />
+                      Registered
+                    </Badge>
+                  </div>
+                )}
                 
                 <CardContent className="p-6">
                   {/* Event Header */}
@@ -182,32 +258,61 @@ const EventsBulletin = () => {
                       <span>Live Event</span>
                     </div>
                     
-                    {event.meetingLink ? (
-                      <Button 
-                        asChild
-                        size="sm" 
-                        className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-full px-6"
-                      >
-                        <a 
-                          href={event.meetingLink} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2"
+                    <div className="flex gap-2">
+                      {event.meetingLink && isRegistered(event.id) ? (
+                        <Button 
+                          asChild
+                          size="sm" 
+                          className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-full px-4"
                         >
-                          <Video className="h-4 w-4" />
-                          Join Event
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
-                      </Button>
-                    ) : (
+                          <a 
+                            href={event.meetingLink} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2"
+                          >
+                            <Video className="h-4 w-4" />
+                            Join
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        </Button>
+                      ) : (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="rounded-full px-4 border-slate-200 hover:border-slate-300"
+                          onClick={() => navigate(`/dashboard?tab=events&event=${event.id}`)}
+                        >
+                          <BookOpen className="h-4 w-4 mr-1" />
+                          Details
+                        </Button>
+                      )}
+                      
                       <Button 
-                        variant="outline" 
                         size="sm" 
-                        className="rounded-full px-6 border-slate-200 hover:border-slate-300"
+                        className={`rounded-full px-4 ${
+                          isRegistered(event.id)
+                            ? 'bg-red-500 hover:bg-red-600 text-white'
+                            : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white'
+                        }`}
+                        onClick={() => handleEventRegistration(event.id, event.title)}
+                        disabled={registrationLoading === event.id}
                       >
-                        Learn More
+                        {registrationLoading === event.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : isRegistered(event.id) ? (
+                          <>
+                            <UserPlus className="h-4 w-4 mr-1" />
+                            Cancel
+                          </>
+                        ) : (
+                          <>
+                            <UserPlus className="h-4 w-4 mr-1" />
+                            Register
+                          </>
+                        )}
                       </Button>
-                    )}
+                    </div>
                   </div>
                 </CardContent>
 
@@ -229,10 +334,17 @@ const EventsBulletin = () => {
                 Stay updated with the latest career opportunities and industry insights.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-full px-8">
+                <Button 
+                  className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-full px-8"
+                  onClick={() => navigate('/dashboard?tab=events')}
+                >
                   View All Events
                 </Button>
-                <Button variant="outline" className="rounded-full px-8 border-slate-200 hover:border-slate-300">
+                <Button 
+                  variant="outline" 
+                  className="rounded-full px-8 border-slate-200 hover:border-slate-300"
+                  onClick={() => navigate('/dashboard?tab=notifications')}
+                >
                   Subscribe to Updates
                 </Button>
               </div>
