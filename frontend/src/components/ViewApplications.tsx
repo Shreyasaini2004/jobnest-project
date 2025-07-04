@@ -51,6 +51,19 @@ const ViewApplications = () => {
       education: "Design, RISD",
       location: "New York, NY",
       resumeScore: 78
+    },
+    {
+      id: 4,
+      candidateName: "Sarah Connors",
+      email: "sarah.connor11@email.com",
+      phone: "+1 (555) 498-7230",
+      jobTitle: "Product Manager",
+      appliedDate: "2023-01-13",
+      status: "interviewed",
+      experience: "3 years",
+      education: "Law, Yale Law School",
+      location: "America, USA",
+      resumeScore: 78
     }
   ];
 
