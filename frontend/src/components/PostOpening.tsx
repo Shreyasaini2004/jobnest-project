@@ -72,8 +72,10 @@ const PostOpening = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl p-6 text-white text-center">
-        <h1 className="text-3xl font-bold">Post Opening</h1>
+      <div className="flex justify-center">
+        <div className="w-full md:w-2/3 lg:w-1/2 bg-gradient-to-r from-purple-500 to-blue-600 rounded-lg py-4 px-6 text-center">
+          <h1 className="text-2xl font-bold text-white">Post Openings</h1>
+        </div>
       </div>
 
       <Card className="shadow-lg border-0">
