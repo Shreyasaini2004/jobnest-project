@@ -21,10 +21,22 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@jobnest" />
     <meta name="twitter:image" content="/jobnest-og.png" />
+
+    <script src="https://cdn.botpress.cloud/webchat/v3.0/inject.js"></script>
   </head>
 
   <body>
     <div id="root"></div>
+    <!-- Botpress Webchat Config (Static Script) -->
+    <script>
+      window.addEventListener("load", function () {
+        const script = document.createElement("script");
+        script.src = "https://files.bpcontent.cloud/2025/07/02/12/20250702125256-PYN2GO6C.js";
+        document.body.appendChild(script);
+      });
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
+
+  
