@@ -30,6 +30,7 @@ const App = () => (
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
                   <Route path="/dashboard" element={<JobSeekerDashboard />} />
+                  <Route path="/apply/:jobId" element={<JobApplicationPage />}/>
                   <Route path="/employer-dashboard" element={<EmployerDashboard />} />
                   <Route path="/profile" element={<ProfilePage />} />
                   <Route path="/settings" element={<SettingsPage />} />
