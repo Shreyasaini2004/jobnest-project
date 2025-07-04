@@ -97,8 +97,10 @@ const ViewApplications = () => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-gradient-to-r from-purple-500 to-blue-600 rounded-xl p-6 text-white text-center">
-        <h1 className="text-3xl font-bold">View Applications</h1>
+      <div className="flex justify-center">
+        <div className="w-full md:w-2/3 lg:w-1/2 bg-gradient-to-r from-purple-500 to-blue-600 rounded-lg py-4 px-6 text-center">
+          <h1 className="text-2xl font-bold text-white">View Application</h1>
+        </div>
       </div>
 
       {/* Search and Filter Section */}
