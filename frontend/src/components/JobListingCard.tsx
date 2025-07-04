@@ -1,21 +1,32 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, DollarSign, Clock } from "lucide-react";
 import BookmarkButton from "./BookmarkButton";
 import { Job } from "@/contexts/SavedJobsContext";
+import { useNavigate } from "react-router-dom";
 
 interface JobListingCardProps {
   job: Job;
 }
 
 const JobListingCard = ({ job }: JobListingCardProps) => {
+  const [expanded, setExpanded] = useState(false);
+  const navigate = useNavigate();
+
+  const handleApply = () => {
+    window.open(`/apply/${job.id}`, "_blank");
+  };
+
   return (
-    <Card className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-border/50 bg-gradient-to-br from-card to-card/50">
+    <Card
+      className={`hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-border/50 bg-gradient-to-br from-card to-card/50`}
+    >
       <CardHeader className="pb-3">
         <div className="flex justify-between items-start mb-3">
-          <Badge 
-            variant="outline" 
+          <Badge
+            variant="outline"
             className="bg-job-primary/10 text-job-primary border-job-primary/20"
           >
             {job.type}
@@ -33,6 +44,7 @@ const JobListingCard = ({ job }: JobListingCardProps) => {
         </CardTitle>
         <p className="text-lg font-semibold text-job-primary">{job.company}</p>
       </CardHeader>
+
       <CardContent className="space-y-4">
         <div className="space-y-2 text-sm text-muted-foreground">
           <div className="flex items-center">
@@ -44,17 +56,39 @@ const JobListingCard = ({ job }: JobListingCardProps) => {
             <span className="font-medium">{job.salary}</span>
           </div>
         </div>
-        
-        <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
+
+        <p
+          className={`text-sm text-muted-foreground leading-relaxed ${
+            expanded ? "" : "line-clamp-3"
+          }`}
+        >
           {job.description}
         </p>
-        
+
+        {expanded && (
+          <div className="pt-2">
+            <h4 className="text-sm font-semibold mb-1 text-foreground">Required Skills:</h4>
+            <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+              {job.skills.map((skill) => (
+                <li key={skill}>{skill}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         <div className="flex gap-2 pt-2">
-          <Button className="flex-1 bg-job-primary hover:bg-job-primary/90 text-white">
+          <Button
+            className="flex-1 bg-job-primary hover:bg-job-primary/90 text-white"
+            onClick={handleApply}
+          >
             Apply Now
           </Button>
-          <Button variant="outline" className="border-job-primary/20 hover:bg-job-primary/5">
-            Details
+          <Button
+            variant="outline"
+            className="border-job-primary/20 hover:bg-job-primary/5"
+            onClick={() => setExpanded(!expanded)}
+          >
+            {expanded ? "Hide Details" : "Details"}
           </Button>
         </div>
       </CardContent>
