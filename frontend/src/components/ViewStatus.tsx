@@ -12,7 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import {
   Users,
   Clock,
@@ -104,45 +103,51 @@ const ViewStatus = () => {
   };
 
   return (
-    <div className="space-y-8">
-      {/* Page Heading */}
-      <div className="border-b pb-4">
-        <h1 className="text-2xl font-semibold text-foreground">Application Overview</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Review the status of all job postings and candidate applications.
-        </p>
+    <div className="space-y-8 px-4 py-6">
+      {/* Header */}
+      <div className="flex justify-center">
+        <div className="w-full md:w-2/3 lg:w-1/2 bg-gradient-to-r from-purple-500 to-blue-600 rounded-lg py-4 px-6 text-center">
+          <h1 className="text-2xl font-bold text-white">Application Overview</h1>
+        </div>
       </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="shadow-sm border">
+        <Card className="shadow-sm border bg-blue-50">
           <CardContent className="p-5 text-center">
-            <p className="text-sm text-muted-foreground">Total Job Postings</p>
-            <h2 className="text-xl font-semibold text-foreground">
+            <Users className="mx-auto mb-2 h-5 w-5 text-blue-700" />
+            <p className="text-sm text-blue-700">Total Job Postings</p>
+            <h2 className="text-xl font-semibold text-blue-800">
               {totalStats.totalJobs}
             </h2>
           </CardContent>
         </Card>
-        <Card className="shadow-sm border">
+
+        <Card className="shadow-sm border bg-green-50">
           <CardContent className="p-5 text-center">
-            <p className="text-sm text-muted-foreground">Active Postings</p>
-            <h2 className="text-xl font-semibold text-foreground">
+            <CheckCircle className="mx-auto mb-2 h-5 w-5 text-green-700" />
+            <p className="text-sm text-green-700">Active Postings</p>
+            <h2 className="text-xl font-semibold text-green-800">
               {totalStats.activeJobs}
             </h2>
           </CardContent>
         </Card>
-        <Card className="shadow-sm border">
+
+        <Card className="shadow-sm border bg-purple-50">
           <CardContent className="p-5 text-center">
-            <p className="text-sm text-muted-foreground">Total Applications</p>
-            <h2 className="text-xl font-semibold text-foreground">
+            <Eye className="mx-auto mb-2 h-5 w-5 text-purple-700" />
+            <p className="text-sm text-purple-700">Total Applications</p>
+            <h2 className="text-xl font-semibold text-purple-800">
               {totalStats.totalApplications}
             </h2>
           </CardContent>
         </Card>
-        <Card className="shadow-sm border">
+
+        <Card className="shadow-sm border bg-yellow-50">
           <CardContent className="p-5 text-center">
-            <p className="text-sm text-muted-foreground">Pending Review</p>
-            <h2 className="text-xl font-semibold text-foreground">
+            <Clock className="mx-auto mb-2 h-5 w-5 text-yellow-700" />
+            <p className="text-sm text-yellow-700">Pending Review</p>
+            <h2 className="text-xl font-semibold text-yellow-800">
               {totalStats.pendingReview}
             </h2>
           </CardContent>
