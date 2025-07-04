@@ -1,7 +1,7 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/sonner"; // ✅ Use only one toaster
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+
 import Index from "./pages/Index";
 import JobSeekerDashboard from "./pages/JobSeekerDashboard";
 import EmployerDashboard from "./pages/EmployerDashboard";
@@ -23,8 +23,7 @@ const App = () => (
         <SavedJobsProvider>
           <ATSAnalysisProvider>
             <TooltipProvider>
-              <Toaster />
-              <Sonner />
+              <Toaster position="top-right" richColors /> {/* ✅ Corrected */}
               <BrowserRouter>
                 <Routes>
                   <Route path="/" element={<Index />} />
@@ -34,9 +33,7 @@ const App = () => (
                   <Route path="/employer-dashboard" element={<EmployerDashboard />} />
                   <Route path="/profile" element={<ProfilePage />} />
                   <Route path="/settings" element={<SettingsPage />} />
-                  {/* Redirect old route to new one */}
                   <Route path="/job-seeker-dashboard" element={<Navigate to="/dashboard" replace />} />
-                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </BrowserRouter>

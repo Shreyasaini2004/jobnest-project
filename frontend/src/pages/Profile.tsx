@@ -8,6 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import axiosInstance from '@/lib/axios';
+import { toast } from 'sonner';
+
 
 export default function ProfilePage() {
   const { user, setUser } = useUser();
@@ -41,10 +43,43 @@ export default function ProfilePage() {
     setForm({ ...form, [field]: value });
   };
 
-  const handleSave = () => {
-    setUser({ ...user, ...form });
-    setEditMode(false);
+  const handleSave = async () => {
+    if (!user || !user._id) {
+      toast.error("User ID not available. Please log in again.");
+      return;
+    }
+  
+    // Optional: Validate required fields
+    if (!form.firstName || !form.lastName || !form.email) {
+      toast.error("Please fill in all required fields.");
+      return;
+    }
+  
+    try {
+      const response = await axiosInstance.post("/api/auth/users/update-profile", {
+        userId: user._id,
+        ...form,
+      });
+  
+      if (response.status === 200) {
+        const updatedUser = response.data;
+  
+        setUser(updatedUser); // Update context
+        setForm((prevForm) => ({ ...prevForm, ...updatedUser }));
+        setEditMode(false);
+  
+        toast.success("Profile updated successfully!");
+        console.log("✅ Profile updated:", updatedUser);
+      } else {
+        toast.error("Failed to update profile.");
+        console.error("❌ Server responded with non-200:", response.status);
+      }
+    } catch (error: any) {
+      console.error("❌ Error saving profile:", error?.response?.data || error.message);
+      toast.error("Something went wrong. Please try again.");
+    }
   };
+  
 
   // Handle avatar upload
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -135,7 +170,7 @@ export default function ProfilePage() {
         >
           {form.avatar ? (
             <>
-              // In the img tag where you display the avatar, update the src attribute:
+               {/* In the img tag where you display the avatar, update the src attribute: */}
               
               <img
                 src={form.avatar} // Cloudinary URLs are already complete, no need to prepend backendUrl
