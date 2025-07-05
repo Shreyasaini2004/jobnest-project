@@ -15,6 +15,7 @@ import { ATSAnalysisProvider } from "./contexts/ATSAnalysisContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 import ProfilePage from "./pages/Profile";
 import SettingsPage from "./pages/Settings";
+import JobApplicationPage from "./components/JobApplicationPage";
 
 const App = () => (
   <ErrorBoundary>
