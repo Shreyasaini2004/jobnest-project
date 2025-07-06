@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/sonner"; // ✅ Use only one toaster
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-
+import ApplyPage from "@/pages/ApplyPage";
 import Index from "./pages/Index";
 import JobSeekerDashboard from "./pages/JobSeekerDashboard";
 import EmployerDashboard from "./pages/EmployerDashboard";
@@ -31,9 +31,9 @@ const App = () => (
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
                   <Route path="/dashboard" element={<JobSeekerDashboard />} />
-                  <Route path="/apply/:jobId" element={<JobApplicationPage />}/>
                   <Route path="/employer-dashboard" element={<EmployerDashboard />} />
                   <Route path="/profile" element={<ProfilePage />} />
+                  <Route path="/apply/:jobId" element={<ApplyPage />} />
                   <Route path="/settings" element={<SettingsPage />} />
                   <Route path="/job-seeker-dashboard" element={<Navigate to="/dashboard" replace />} />
                   <Route path="*" element={<NotFound />} />

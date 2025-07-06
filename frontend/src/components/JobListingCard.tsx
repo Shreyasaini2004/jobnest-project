@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,20 +8,21 @@ import { useNavigate } from "react-router-dom";
 
 interface JobListingCardProps {
   job: Job;
+  isExpanded: boolean;
+  onToggleDetails: () => void;
+  onApply: () => void;
 }
 
-const JobListingCard = ({ job }: JobListingCardProps) => {
-  const [expanded, setExpanded] = useState(false);
+const JobListingCard = ({
+  job,
+  isExpanded,
+  onToggleDetails,
+  onApply,
+}: JobListingCardProps) => {
   const navigate = useNavigate();
 
-  const handleApply = () => {
-    window.open(`/apply/${job.id}`, "_blank");
-  };
-
   return (
-    <Card
-      className={`hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-border/50 bg-gradient-to-br from-card to-card/50`}
-    >
+    <Card className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-border/50 bg-gradient-to-br from-card to-card/50">
       <CardHeader className="pb-3">
         <div className="flex justify-between items-start mb-3">
           <Badge
@@ -59,13 +59,13 @@ const JobListingCard = ({ job }: JobListingCardProps) => {
 
         <p
           className={`text-sm text-muted-foreground leading-relaxed ${
-            expanded ? "" : "line-clamp-3"
+            isExpanded ? "" : "line-clamp-3"
           }`}
         >
           {job.description}
         </p>
 
-        {expanded && (
+        {isExpanded && (
           <div className="pt-2">
             <h4 className="text-sm font-semibold mb-1 text-foreground">Required Skills:</h4>
             <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
@@ -79,16 +79,16 @@ const JobListingCard = ({ job }: JobListingCardProps) => {
         <div className="flex gap-2 pt-2">
           <Button
             className="flex-1 bg-job-primary hover:bg-job-primary/90 text-white"
-            onClick={handleApply}
+            onClick={onApply}
           >
             Apply Now
           </Button>
           <Button
             variant="outline"
             className="border-job-primary/20 hover:bg-job-primary/5"
-            onClick={() => setExpanded(!expanded)}
+            onClick={onToggleDetails}
           >
-            {expanded ? "Hide Details" : "Details"}
+            {isExpanded ? "Hide Details" : "Details"}
           </Button>
         </div>
       </CardContent>

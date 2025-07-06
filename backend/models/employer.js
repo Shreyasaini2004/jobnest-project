@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const employerSchema = new mongoose.Schema({
   firstName: String,
@@ -16,4 +16,5 @@ const employerSchema = new mongoose.Schema({
   avatar: String // URL or path to profile image
 }, { timestamps: true });
 
-module.exports = mongoose.model("Employer", employerSchema);
+const Employer = mongoose.model("Employer", employerSchema);
+export default Employer;

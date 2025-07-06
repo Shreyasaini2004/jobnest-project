@@ -1,18 +1,18 @@
-const express = require('express');
-const router = express.Router(); // ✅ This line was missing!
-const User = require('../models/jobSeeker'); // ✅ Correct
+import express from "express";
+import User from "../models/jobSeeker.js";
+
+const router = express.Router();
 
 // POST /api/auth/users/update-profile
 router.post('/update-profile', async (req, res) => {
   try {
     const { userId, ...profileData } = req.body;
 
-    console.log('Incoming update request:', req.body); // ✅ Log what frontend is sending
+    console.log('Incoming update request:', req.body);
 
     const updatedUser = await User.findByIdAndUpdate(userId, profileData, { new: true });
 
-    console.log('Updated user from DB:', updatedUser); // ✅ Log what DB returns
-
+    console.log('Updated user from DB:', updatedUser);
 
     if (!updatedUser) {
       return res.status(404).json({ error: 'User not found' });
@@ -25,4 +25,4 @@ router.post('/update-profile', async (req, res) => {
   }
 });
 
-module.exports = router; // ✅ export the router
+export default router;

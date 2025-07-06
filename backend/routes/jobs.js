@@ -1,26 +1,64 @@
-const express = require('express');
-const router = express.Router();
-const Job = require('../models/job');
-const mongoose = require('mongoose');
+import express from "express";
+import mongoose from "mongoose";
+import { generateEmbedding } from "../config/geminiClient.js";
+import Job from "../models/job.js";
 
-// Create a new job
-router.post("/create", async (req, res) => {
-  console.log("📥 Job data received:", req.body);
+const router = express.Router();
+
+// ----------------------------
+// ✅ GET /api/jobs?recruiterId=xyz
+// ----------------------------
+router.get('/', async (req, res) => {
+  const { recruiterId } = req.query;
+  if (!recruiterId) return res.status(400).json({ error: "Missing recruiterId" });
 
   try {
-    const job = new Job(req.body);
-    const saved = await job.save();
-    res.status(201).json(saved);
+    const jobs = await Job.find({ postedBy: recruiterId }).select("jobTitle");
+    res.status(200).json(jobs);
   } catch (err) {
-    console.error("❌ Error saving job:", err.message);
+    console.error("❌ Error fetching jobs by recruiter:", err.message);
+    res.status(500).json({ error: "Failed to fetch jobs", details: err.message });
+  }
+});
+
+// ----------------------------
+// ✅ POST /api/jobs/create
+// ----------------------------
+router.post("/create", async (req, res) => {
+  try {
+    const { jobTitle, description } = req.body;
+
+    if (!jobTitle || !description) {
+      return res.status(400).json({ error: "jobTitle and description are required" });
+    }
+
+    const textToEmbed = `${jobTitle} ${description}`.trim();
+
+    // ✅ Call *our* embedding generator
+    const embedding = await generateEmbedding(textToEmbed);
+
+    const newJob = new Job({
+      ...req.body,
+      embedding,
+    });
+
+    const savedJob = await newJob.save();
+
+    res.status(201).json(savedJob);
+  } catch (err) {
+    console.error("❌ Error creating job:", err);
     res.status(500).json({ error: "Failed to create job", details: err.message });
   }
 });
 
-// Get all jobs
+// ----------------------------
+// ✅ GET /api/jobs/all
+// ----------------------------
 router.get("/all", async (req, res) => {
   try {
-    const jobs = await Job.find().sort({ createdAt: -1 }).populate('postedBy', 'companyName');
+    const jobs = await Job.find()
+      .sort({ createdAt: -1 })
+      .populate('postedBy', 'companyName');
     res.status(200).json(jobs);
   } catch (err) {
     console.error("❌ Error fetching jobs:", err.message);
@@ -28,15 +66,15 @@ router.get("/all", async (req, res) => {
   }
 });
 
-// Get featured jobs
+// ----------------------------
+// ✅ GET /api/jobs/featured
+// ----------------------------
 router.get("/featured", async (req, res) => {
   try {
-    // Get the 6 most recent jobs
     const featuredJobs = await Job.find()
       .sort({ createdAt: -1 })
       .limit(6)
       .populate('postedBy', 'companyName');
-    
     res.status(200).json(featuredJobs);
   } catch (err) {
     console.error("❌ Error fetching featured jobs:", err.message);
@@ -44,21 +82,23 @@ router.get("/featured", async (req, res) => {
   }
 });
 
-// Get job by ID
+// ----------------------------
+// ✅ GET /api/jobs/:id
+// ----------------------------
 router.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ error: "Invalid job ID format" });
     }
-    
+
     const job = await Job.findById(id).populate('postedBy', 'companyName companyEmail companyWebsite');
-    
+
     if (!job) {
       return res.status(404).json({ error: "Job not found" });
     }
-    
+
     res.status(200).json(job);
   } catch (err) {
     console.error("❌ Error fetching job:", err.message);
@@ -66,14 +106,15 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// Search jobs with filters
+// ----------------------------
+// ✅ GET /api/jobs/search/filters
+// ----------------------------
 router.get("/search/filters", async (req, res) => {
   try {
     const { searchTerm, jobType, location } = req.query;
-    
-    // Build the query object
+
     const query = {};
-    
+
     if (searchTerm) {
       query.$or = [
         { jobTitle: { $regex: searchTerm, $options: 'i' } },
@@ -81,19 +122,19 @@ router.get("/search/filters", async (req, res) => {
         { requirements: { $regex: searchTerm, $options: 'i' } }
       ];
     }
-    
+
     if (jobType && jobType !== 'all') {
       query.jobType = { $regex: jobType, $options: 'i' };
     }
-    
+
     if (location && location !== 'all') {
       query.location = { $regex: location, $options: 'i' };
     }
-    
+
     const jobs = await Job.find(query)
       .sort({ createdAt: -1 })
       .populate('postedBy', 'companyName');
-    
+
     res.status(200).json(jobs);
   } catch (err) {
     console.error("❌ Error searching jobs:", err.message);
@@ -101,15 +142,17 @@ router.get("/search/filters", async (req, res) => {
   }
 });
 
-// Get jobs posted by a specific employer
+// ----------------------------
+// ✅ GET /api/jobs/employer/:employerId
+// ----------------------------
 router.get("/employer/:employerId", async (req, res) => {
   try {
     const { employerId } = req.params;
-    
+
     if (!mongoose.Types.ObjectId.isValid(employerId)) {
       return res.status(400).json({ error: "Invalid employer ID format" });
     }
-    
+
     const jobs = await Job.find({ postedBy: employerId }).sort({ createdAt: -1 });
     res.status(200).json(jobs);
   } catch (err) {
@@ -118,21 +161,23 @@ router.get("/employer/:employerId", async (req, res) => {
   }
 });
 
-// Update a job
+// ----------------------------
+// ✅ PUT /api/jobs/:id
+// ----------------------------
 router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ error: "Invalid job ID format" });
     }
-    
+
     const updatedJob = await Job.findByIdAndUpdate(id, req.body, { new: true });
-    
+
     if (!updatedJob) {
       return res.status(404).json({ error: "Job not found" });
     }
-    
+
     res.status(200).json(updatedJob);
   } catch (err) {
     console.error("❌ Error updating job:", err.message);
@@ -140,21 +185,23 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// Delete a job
+// ----------------------------
+// ✅ DELETE /api/jobs/:id
+// ----------------------------
 router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ error: "Invalid job ID format" });
     }
-    
+
     const deletedJob = await Job.findByIdAndDelete(id);
-    
+
     if (!deletedJob) {
       return res.status(404).json({ error: "Job not found" });
     }
-    
+
     res.status(200).json({ message: "Job deleted successfully" });
   } catch (err) {
     console.error("❌ Error deleting job:", err.message);
@@ -162,4 +209,4 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

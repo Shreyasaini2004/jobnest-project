@@ -1,24 +1,36 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const path = require('path');
-const fs = require('fs');
-require('dotenv').config();
+import express from "express";
+import mongoose from "mongoose";
+import cors from "cors";
+import path from "path";
+import fs from "fs";
+import dotenv from "dotenv";
+import { fileURLToPath } from "url";
 
-// ✅ Import all route files
-const authRoutes = require('./routes/auth');
-const jobRoutes = require('./routes/jobs');
-const userRoutes = require('./routes/userRoutes'); // ✅ Fix here
+// ✅ Load .env
+dotenv.config();
+
+// ✅ Fix __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// ✅ Import all route files (ES modules)
+import authRoutes from "./routes/auth.js";
+import applicationRoutes from "./routes/applications.js";
+import jobRoutes from "./routes/jobs.js";
+import userRoutes from "./routes/userRoutes.js";
+import embeddingRoutes from "./routes/embedding.js";
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-// ✅ Use userRoutes before /api/auth fallback
+// ✅ API routes
+app.use('/api/applications', applicationRoutes);
 app.use('/api/auth/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobRoutes);
+app.use('/api/embedding', embeddingRoutes);
 
 // ✅ Serve uploads folder as static
 const uploadsPath = path.join(__dirname, 'uploads');

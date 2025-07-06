@@ -1,8 +1,8 @@
 // backend/controllers/userController.js
 
-const User = require('../models/User');
+import User from '../models/User.js';
 
-const updateUserProfile = async (req, res) => {
+export const updateUserProfile = async (req, res) => {
   try {
     const { userId, ...profileData } = req.body;
 
@@ -18,5 +18,3 @@ const updateUserProfile = async (req, res) => {
     return res.status(500).json({ error: 'Server error updating profile' });
   }
 };
-
-module.exports = { updateUserProfile, uploadAvatar };

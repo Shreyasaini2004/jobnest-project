@@ -1,8 +1,8 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const jobSchema = new mongoose.Schema({
-    jobTitle: { type: String, required: true },
-    jobType: { type: String, required: true },
+  jobTitle: { type: String, required: true },
+  jobType: { type: String, required: true },
   department: String,
   location: String,
   salaryRange: String,
@@ -14,11 +14,16 @@ const jobSchema = new mongoose.Schema({
   registrationFee: String,
   postedBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Employer', // 👈 This must match your Employer model
+    ref: 'Employer', // Must match your Employer model name
     required: true,
   },
+  embedding: {
+    type: [Number],
+    default: []
+  }
 }, {
   timestamps: true,
 });
 
-module.exports = mongoose.model('Job', jobSchema);
+const Job = mongoose.model('Job', jobSchema);
+export default Job;

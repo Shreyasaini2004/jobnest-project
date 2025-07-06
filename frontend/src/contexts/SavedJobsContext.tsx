@@ -14,6 +14,7 @@ export interface Job {
   featured?: boolean;
   deadline?: Date;
   reminderSet?: boolean;
+  postedById: string;
 }
 
 interface SavedJobsContextType {

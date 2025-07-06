@@ -1,6 +1,4 @@
-// models/jobSeeker.js
-
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const jobSeekerSchema = new mongoose.Schema(
   {
@@ -9,7 +7,7 @@ const jobSeekerSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
 
-    // ✅ Add these fields for the profile form
+    // ✅ Profile form fields
     phone: { type: String },
     location: { type: String },
     experience: { type: String },
@@ -21,4 +19,5 @@ const jobSeekerSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("JobSeeker", jobSeekerSchema);
+const JobSeeker = mongoose.model("JobSeeker", jobSeekerSchema);
+export default JobSeeker;
