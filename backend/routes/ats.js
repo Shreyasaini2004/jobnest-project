@@ -316,5 +316,4 @@ router.post('/chatbot', limiter, async (req, res) => {
     res.status(500).json({ error: 'Chatbot error: ' + err.message, privacy: privacyDisclaimer });
   }
 });
-
 module.exports = router;
