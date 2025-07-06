@@ -251,4 +251,70 @@ router.post('/email', limiter, async (req, res) => {
   }
 });
 
+// POST /chatbot - AI chatbot for resume help
+router.post('/chatbot', limiter, async (req, res) => {
+  const { messages } = req.body;
+  const apiKey = process.env.OPENAI_API_KEY;
+  
+  if (!messages || !Array.isArray(messages)) {
+    return res.status(400).json({ error: 'Missing or invalid messages array', privacy: privacyDisclaimer });
+  }
+  
+  if (!apiKey) {
+    return res.status(503).json({ error: 'Chatbot service not configured (No API key set)', privacy: privacyDisclaimer });
+  }
+  
+  try {
+    // Check if the API key starts with 'sk-ant' or 'sk-proj' (Claude API)
+    if (apiKey.startsWith('sk-ant') || apiKey.startsWith('sk-proj')) {
+      console.log('Using Anthropic Claude API for chatbot');
+      // Use Anthropic Claude API with correct headers
+      try {
+        console.log('Sending request to Anthropic API for chatbot...');
+        const response = await axios.post('https://api.anthropic.com/v1/messages', {
+          model: 'claude-3-haiku-20240307',
+          max_tokens: 1200,
+          messages: messages,
+          temperature: 0.7
+        }, {
+          headers: {
+            'anthropic-version': '2023-06-01',
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        console.log('Anthropic API response status for chatbot:', response.status);
+        
+        const reply = response.data.content[0].text;
+        res.json({ reply, privacy: privacyDisclaimer });
+      } catch (error) {
+        console.error('Anthropic API error details for chatbot:', error.response ? error.response.data : error.message);
+        throw error;
+      }
+    } else {
+      console.log('Using OpenAI API for chatbot');
+      // Use OpenAI API as fallback
+      const response = await axios.post('https://api.openai.com/v1/chat/completions', {
+        model: 'gpt-3.5-turbo',
+        messages: [
+          { role: 'system', content: 'You are a helpful resume writing and job application assistant.' },
+          ...messages
+        ],
+        max_tokens: 1200,
+        temperature: 0.7
+      }, {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      const reply = response.data.choices[0].message.content;
+      res.json({ reply, privacy: privacyDisclaimer });
+    }
+  } catch (err) {
+    console.error('Chatbot error:', err.message);
+    res.status(500).json({ error: 'Chatbot error: ' + err.message, privacy: privacyDisclaimer });
+  }
+});
+
 module.exports = router;

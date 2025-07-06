@@ -15,6 +15,7 @@ import SearchResults from "./pages/SearchResults";
 import JobDetails from "./pages/JobDetails";
 import EmployerProfile from "./pages/EmployerProfile";
 import EmployerSettings from "./pages/EmployerSettings";
+import ChatWrapper from "./components/ChatWrapper";
 
 import { UserProvider } from "./contexts/UserContext";
 import { EventProvider } from "./contexts/EventContext";
@@ -22,7 +23,6 @@ import { SavedJobsProvider } from "./contexts/SavedJobsContext";
 import { ATSAnalysisProvider } from "./contexts/ATSAnalysisContext";
 
 import ErrorBoundary from "./components/ErrorBoundary";
-import ChatWrapper from "./components/ChatWrapper"; // ✅ NEW wrapper for /chat
 
 const App = () => (
   <ErrorBoundary>
@@ -46,7 +46,7 @@ const App = () => (
                   <Route path="/employer-settings" element={<EmployerSettings />} />
                   <Route path="/search" element={<SearchResults />} />
                   <Route path="/jobs/:jobId" element={<JobDetails />} />
-                  <Route path="/chat" element={<ChatWrapper />} /> {/* ✅ Updated */}
+                  <Route path="/chat" element={<ChatWrapper />} />
                   <Route path="/job-seeker-dashboard" element={<Navigate to="/dashboard" replace />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>

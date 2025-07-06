@@ -3,7 +3,7 @@ import React from "react";
 import Chat from "./Chat";
 import { io } from "socket.io-client";
 
-const socket = io("http://localhost:3001"); // adjust if your backend is on another port
+const socket = io("http://localhost:5000"); // adjust if your backend is on another port
 
 const ChatWrapper = () => {
   const [searchParams] = useSearchParams();
