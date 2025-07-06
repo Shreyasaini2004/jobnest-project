@@ -148,15 +148,20 @@ const DashboardHome = () => {
         <Card className={`lg:col-span-1 rounded-2xl shadow-xl border-0 bg-white/90 dark:bg-[#23263A] dark:shadow-2xl dark:border-none transform transition-all duration-300 hover:scale-[1.025] hover:shadow-2xl ${fadeInClass}`}
           tabIndex={0} aria-label="Profile Card">
           <CardContent className="pt-8 flex flex-col items-center text-center">
-            <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 dark:from-blue-700 dark:to-purple-700 text-white flex items-center justify-center text-2xl sm:text-3xl font-bold mb-4 shadow-lg">
-              {userInitials}
+            <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 dark:from-blue-700 dark:to-purple-700 text-white flex items-center justify-center text-2xl sm:text-3xl font-bold mb-4 shadow-lg overflow-hidden">
+              {user?.avatar ? (
+                <img src={user.avatar} alt="Profile" className="h-full w-full object-cover" />
+              ) : (
+                userInitials
+              )}
             </div>
             <h2 className="text-xl sm:text-2xl font-bold mb-1 text-blue-700 dark:text-blue-200" id="welcome-heading">Welcome, {userName}!</h2>
             <p className="text-muted-foreground text-xs sm:text-sm mb-4 dark:text-blue-100/70">{userType === 'job-seeker' ? 'Job Seeker' : 'Employer'}</p>
-            <Button variant="outline" className="mb-4 border-blue-200 text-blue-700 dark:text-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-transform duration-200 hover:scale-105 w-full max-w-xs mx-auto text-xs sm:text-base focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2" aria-label="Edit Profile">Edit Profile</Button>
             <div className="grid grid-cols-1 gap-3 w-full max-w-xs mx-auto">
               <Button className="w-full bg-blue-500 hover:bg-blue-600 dark:bg-blue-700 dark:hover:bg-blue-800 text-white font-semibold rounded-xl shadow transition-transform duration-200 hover:scale-105 text-xs sm:text-base focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2" aria-label="Upload Resume">Upload Resume</Button>
-              <Button className="w-full bg-purple-400 hover:bg-purple-500 dark:bg-purple-700 dark:hover:bg-purple-800 text-white font-semibold rounded-xl shadow transition-transform duration-200 hover:scale-105 text-xs sm:text-base focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2" aria-label="Post a Job">Post a Job</Button>
+              {userType === 'employer' && (
+                <Button className="w-full bg-purple-400 hover:bg-purple-500 dark:bg-purple-700 dark:hover:bg-purple-800 text-white font-semibold rounded-xl shadow transition-transform duration-200 hover:scale-105 text-xs sm:text-base focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2" aria-label="Post a Job">Post a Job</Button>
+              )}
               <Button variant="outline" className="w-full border-blue-200 text-blue-700 dark:text-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-xl transition-transform duration-200 hover:scale-105 text-xs sm:text-base focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2" aria-label="Search Jobs">Search Jobs</Button>
             </div>
           </CardContent>

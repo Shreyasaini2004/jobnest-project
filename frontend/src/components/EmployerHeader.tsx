@@ -30,8 +30,6 @@ const EmployerHeader = () => {
       transition={{ duration: 0.4 }}
     >
       <div className="flex items-center space-x-4">
-        <SidebarTrigger className="hover:bg-slate-100 p-2 rounded-lg transition-colors" />
-        
         <div className="flex items-center space-x-3">
           <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
             <Building2 className="h-6 w-6 text-white" />
@@ -51,25 +49,29 @@ const EmployerHeader = () => {
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-3 focus:outline-none">
+            <motion.button
+              className="flex items-center gap-3 focus:outline-none bg-gradient-to-r from-indigo-100 to-purple-100 hover:from-indigo-200 hover:to-purple-200 rounded-full p-1 shadow-md transition-all duration-200"
+              whileHover={{ scale: 1.06, boxShadow: '0 4px 16px 0 rgba(99,102,241,0.15)' }}
+              whileTap={{ scale: 0.97 }}
+            >
               {avatarUrl ? (
-                <img src={avatarUrl} alt="avatar" className="h-10 w-10 rounded-full object-cover border-2 border-blue-400" />
+                <img src={avatarUrl} alt="avatar" className="h-10 w-10 rounded-full object-cover border-2 border-indigo-400 shadow" />
               ) : (
-                <span className="h-10 w-10 rounded-full bg-blue-200 flex items-center justify-center text-lg font-bold text-blue-700 border-2 border-blue-400">
+                <span className="h-10 w-10 rounded-full bg-indigo-200 flex items-center justify-center text-lg font-bold text-indigo-700 border-2 border-indigo-400 shadow">
                   {initials}
                 </span>
               )}
-              <span className="font-semibold text-blue-900 text-base hidden sm:inline">{user?.firstName} {user?.lastName}</span>
-            </button>
+              <span className="font-semibold text-indigo-900 text-base hidden sm:inline">{user?.firstName} {user?.lastName}</span>
+            </motion.button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 bg-white border border-slate-200 shadow-lg">
+          <DropdownMenuContent align="end" className="w-56 bg-white border border-slate-200 shadow-xl rounded-xl animate-fade-in">
             <DropdownMenuLabel className="font-semibold">Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="flex items-center space-x-2 cursor-pointer hover:bg-slate-50">
+            <DropdownMenuItem className="flex items-center space-x-2 cursor-pointer hover:bg-slate-50" onClick={() => navigate('/employer-profile')}>
               <User className="h-4 w-4" />
               <span>Profile</span>
             </DropdownMenuItem>
-            <DropdownMenuItem className="flex items-center space-x-2 cursor-pointer hover:bg-slate-50">
+            <DropdownMenuItem className="flex items-center space-x-2 cursor-pointer hover:bg-slate-50" onClick={() => navigate('/employer-settings')}>
               <Settings className="h-4 w-4" />
               <span>Settings</span>
             </DropdownMenuItem>

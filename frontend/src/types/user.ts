@@ -15,6 +15,9 @@ export interface User {
   skills?: string;
   bio?: string;
   avatar?: string;
+  profileImageUrl?: string;
+  companyName?: string;
+  website?: string;
 }
 
 export interface EmployerSignupData {

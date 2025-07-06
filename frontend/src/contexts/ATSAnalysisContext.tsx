@@ -1,4 +1,7 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import axios from '@/lib/axios';
+import { useUser } from './UserContext';
+import { useToast } from '@/hooks/use-toast';
 
 export interface SavedATSAnalysis {
   id: string;
@@ -13,8 +16,8 @@ export interface SavedATSAnalysis {
 
 interface ATSAnalysisContextType {
   savedAnalyses: SavedATSAnalysis[];
-  saveAnalysis: (analysis: Omit<SavedATSAnalysis, 'id' | 'timestamp'>) => void;
-  deleteAnalysis: (id: string) => void;
+  saveAnalysis: (analysis: Omit<SavedATSAnalysis, 'id' | 'timestamp'>) => Promise<void>;
+  deleteAnalysis: (id: string) => Promise<void>;
   getAnalysisById: (id: string) => SavedATSAnalysis | undefined;
 }
 
@@ -34,50 +37,82 @@ interface ATSAnalysisProviderProps {
 
 export const ATSAnalysisProvider = ({ children }: ATSAnalysisProviderProps) => {
   const [savedAnalyses, setSavedAnalyses] = useState<SavedATSAnalysis[]>([]);
+  const { user } = useUser();
+  const { toast } = useToast();
 
-  const saveAnalysis = (analysis: Omit<SavedATSAnalysis, 'id' | 'timestamp'>) => {
-    const newAnalysis: SavedATSAnalysis = {
-      ...analysis,
-      id: Date.now().toString(),
-      timestamp: new Date(),
+  // Fetch saved analyses from backend if logged in
+  useEffect(() => {
+    const fetchSaved = async () => {
+      if (user && user._id) {
+        try {
+          const res = await axios.get('/api/ats/saved');
+          setSavedAnalyses(res.data.analyses.map((a: any) => ({ ...a, id: a._id, timestamp: new Date(a.timestamp) })));
+        } catch (err) {
+          toast({ title: 'Failed to load saved analyses', variant: 'destructive' });
+        }
+      } else {
+        // Fallback to localStorage
+        const saved = localStorage.getItem('ats-analyses');
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            setSavedAnalyses(parsed.map((analysis: any) => ({ ...analysis, timestamp: new Date(analysis.timestamp) })));
+          } catch (error) {
+            setSavedAnalyses([]);
+          }
+        } else {
+          setSavedAnalyses([]);
+        }
+      }
     };
+    fetchSaved();
+  }, [user]);
 
-    setSavedAnalyses(prev => [newAnalysis, ...prev]);
-    
-    // In a real app, save to localStorage or backend
-    const existingAnalyses = JSON.parse(localStorage.getItem('ats-analyses') || '[]');
-    const updatedAnalyses = [newAnalysis, ...existingAnalyses];
-    localStorage.setItem('ats-analyses', JSON.stringify(updatedAnalyses));
+  const saveAnalysis = async (analysis: Omit<SavedATSAnalysis, 'id' | 'timestamp'>) => {
+    if (user && user._id) {
+      try {
+        const res = await axios.post('/api/ats/save', analysis);
+        setSavedAnalyses(prev => [{ ...res.data.saved, id: res.data.saved._id, timestamp: new Date(res.data.saved.timestamp) }, ...prev]);
+        toast({ title: 'Analysis saved to your account' });
+      } catch (err) {
+        toast({ title: 'Failed to save analysis', variant: 'destructive' });
+      }
+    } else {
+      // Fallback to localStorage
+      const newAnalysis: SavedATSAnalysis = {
+        ...analysis,
+        id: Date.now().toString(),
+        timestamp: new Date(),
+      };
+      setSavedAnalyses(prev => [newAnalysis, ...prev]);
+      const existingAnalyses = JSON.parse(localStorage.getItem('ats-analyses') || '[]');
+      const updatedAnalyses = [newAnalysis, ...existingAnalyses];
+      localStorage.setItem('ats-analyses', JSON.stringify(updatedAnalyses));
+      toast({ title: 'Analysis saved locally (login to sync)' });
+    }
   };
 
-  const deleteAnalysis = (id: string) => {
-    setSavedAnalyses(prev => prev.filter(analysis => analysis.id !== id));
-    
-    // In a real app, remove from localStorage or backend
-    const existingAnalyses = JSON.parse(localStorage.getItem('ats-analyses') || '[]');
-    const updatedAnalyses = existingAnalyses.filter((analysis: SavedATSAnalysis) => analysis.id !== id);
-    localStorage.setItem('ats-analyses', JSON.stringify(updatedAnalyses));
+  const deleteAnalysis = async (id: string) => {
+    if (user && user._id) {
+      try {
+        await axios.delete(`/api/ats/saved/${id}`);
+        setSavedAnalyses(prev => prev.filter(a => a.id !== id));
+        toast({ title: 'Analysis deleted' });
+      } catch (err) {
+        toast({ title: 'Failed to delete analysis', variant: 'destructive' });
+      }
+    } else {
+      setSavedAnalyses(prev => prev.filter(analysis => analysis.id !== id));
+      const existingAnalyses = JSON.parse(localStorage.getItem('ats-analyses') || '[]');
+      const updatedAnalyses = existingAnalyses.filter((analysis: SavedATSAnalysis) => analysis.id !== id);
+      localStorage.setItem('ats-analyses', JSON.stringify(updatedAnalyses));
+      toast({ title: 'Analysis deleted' });
+    }
   };
 
   const getAnalysisById = (id: string) => {
     return savedAnalyses.find(analysis => analysis.id === id);
   };
-
-  // Load saved analyses from localStorage on mount
-  useState(() => {
-    const saved = localStorage.getItem('ats-analyses');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        setSavedAnalyses(parsed.map((analysis: any) => ({
-          ...analysis,
-          timestamp: new Date(analysis.timestamp)
-        })));
-      } catch (error) {
-        console.error('Failed to load saved analyses:', error);
-      }
-    }
-  });
 
   return (
     <ATSAnalysisContext.Provider value={{

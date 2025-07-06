@@ -2,7 +2,7 @@ import axios from 'axios';
 import { logout as userLogout } from '@/contexts/UserContext';
 
 // Get backend URL from environment variables or use default
-const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+const backendUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
 console.log('Backend URL configured as:', backendUrl);
 
 // Create axios instance with the backend URL

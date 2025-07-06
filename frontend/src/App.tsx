@@ -13,6 +13,8 @@ import ProfilePage from "./pages/Profile";
 import SettingsPage from "./pages/Settings";
 import SearchResults from "./pages/SearchResults";
 import JobDetails from "./pages/JobDetails";
+import EmployerProfile from "./pages/EmployerProfile";
+import EmployerSettings from "./pages/EmployerSettings";
 
 import { UserProvider } from "./contexts/UserContext";
 import { EventProvider } from "./contexts/EventContext";
@@ -39,7 +41,9 @@ const App = () => (
                   <Route path="/dashboard" element={<JobSeekerDashboard />} />
                   <Route path="/employer-dashboard" element={<EmployerDashboard />} />
                   <Route path="/profile" element={<ProfilePage />} />
+                  <Route path="/employer-profile" element={<EmployerProfile />} />
                   <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="/employer-settings" element={<EmployerSettings />} />
                   <Route path="/search" element={<SearchResults />} />
                   <Route path="/jobs/:jobId" element={<JobDetails />} />
                   <Route path="/chat" element={<ChatWrapper />} /> {/* ✅ Updated */}

@@ -34,6 +34,7 @@ const CalendarEvents = () => {
     description: '',
     meetingLink: ''
   });
+  const [view, setView] = useState<'calendar' | 'create' | 'my-events'>('calendar');
 
   // Get events for the selected date
   const selectedDateEvents = useMemo(() => {
@@ -92,233 +93,275 @@ const CalendarEvents = () => {
   };
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Calendar & Events</h1>
-          <p className="text-muted-foreground mt-1">Manage your events and schedule</p>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
+        <h1 className="text-3xl font-bold text-indigo-700">Calendar & Events</h1>
+        <div className="flex gap-2">
+          <Button
+            variant={view === 'calendar' ? 'default' : 'outline'}
+            className="rounded-full px-5 py-2 text-base font-semibold shadow-sm hover:bg-indigo-100 hover:text-indigo-700 transition"
+            onClick={() => setView('calendar')}
+          >
+            Calendar
+          </Button>
+          <Button
+            variant={view === 'create' ? 'default' : 'outline'}
+            className="rounded-full px-5 py-2 text-base font-semibold shadow-sm hover:bg-indigo-100 hover:text-indigo-700 transition"
+            onClick={() => setView('create')}
+          >
+            Create Event
+          </Button>
+          <Button
+            variant={view === 'my-events' ? 'default' : 'outline'}
+            className="rounded-full px-5 py-2 text-base font-semibold shadow-sm hover:bg-indigo-100 hover:text-indigo-700 transition"
+            onClick={() => setView('my-events')}
+          >
+            My Events
+          </Button>
         </div>
-        <Dialog open={showEventForm} onOpenChange={setShowEventForm}>
-          <DialogTrigger asChild>
-            <Button className="bg-job-primary hover:bg-job-primary/90">
-              <Plus className="h-4 w-4 mr-2" />
-              Create Event
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Create New Event</DialogTitle>
-              <DialogDescription>
-                Schedule a new job fair or webinar event.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">Event Title</Label>
-                <Input
-                  id="title"
-                  value={newEvent.title}
-                  onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
-                  placeholder="Enter event title"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="type">Event Type</Label>
-                <Select
-                  value={newEvent.type}
-                  onValueChange={(value) => setNewEvent({ ...newEvent, type: value as 'job-fair' | 'webinar' })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="job-fair">Job Fair</SelectItem>
-                    <SelectItem value="webinar">Webinar</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="meetingLink">Meeting Link (Optional)</Label>
-                <Input
-                  id="meetingLink"
-                  value={newEvent.meetingLink}
-                  onChange={(e) => setNewEvent({ ...newEvent, meetingLink: e.target.value })}
-                  placeholder="https://meet.google.com/..."
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={newEvent.description}
-                  onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
-                  placeholder="Enter event description"
-                  rows={3}
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowEventForm(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleCreateEvent} disabled={!newEvent.title}>
-                Create Event
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Calendar Section */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Calendar */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CalendarIcon className="h-5 w-5" />
-                Calendar
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={setDate}
-                className="rounded-md border"
-                modifiers={{
-                  event: (date) => events.some(event => isSameDay(event.date, date))
-                }}
-                modifiersStyles={{
-                  event: { backgroundColor: '#3b82f6', color: 'white' }
-                }}
-              />
-            </CardContent>
-          </Card>
-
-          {/* Selected Date Events */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                {date ? formatEventDate(date) : 'Select a date'} Events
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {selectedDateEvents.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <CalendarIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No events scheduled for this date</p>
-                  <p className="text-sm">Click "Create Event" to add one</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {selectedDateEvents.map((event) => (
-                    <div key={event.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex items-center gap-3">
-                          {getEventTypeIcon(event.type)}
-                          <div>
-                            <h3 className="font-semibold text-lg">{event.title}</h3>
-                            <p className="text-sm text-muted-foreground">{formatEventTime(event.date)}</p>
+      {view === 'calendar' && (
+        <div className="space-y-6 p-6">
+          {/* Calendar and events grid, no duplicate header */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Calendar Section */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Calendar */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <CalendarIcon className="h-5 w-5" />
+                    Calendar
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Calendar
+                    mode="single"
+                    selected={date}
+                    onSelect={setDate}
+                    className="rounded-md border"
+                    modifiers={{
+                      event: (date) => events.some(event => isSameDay(event.date, date))
+                    }}
+                    modifiersStyles={{
+                      event: { backgroundColor: '#3b82f6', color: 'white' }
+                    }}
+                  />
+                </CardContent>
+              </Card>
+              {/* Selected Date Events */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Clock className="h-5 w-5" />
+                    {date ? formatEventDate(date) : 'Select a date'} Events
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {selectedDateEvents.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <CalendarIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>No events scheduled for this date</p>
+                      <p className="text-sm">Click "Create Event" to add one</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {selectedDateEvents.map((event) => (
+                        <div key={event.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex items-center gap-3">
+                              {getEventTypeIcon(event.type)}
+                              <div>
+                                <h3 className="font-semibold text-lg">{event.title}</h3>
+                                <p className="text-sm text-muted-foreground">{formatEventTime(event.date)}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className={getEventTypeColor(event.type)}>
+                                {event.type === 'job-fair' ? 'Job Fair' : 'Webinar'}
+                              </Badge>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeEvent(event.id)}
+                                className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                          {event.description && (
+                            <p className="text-sm text-muted-foreground mb-3">{event.description}</p>
+                          )}
+                          {event.meetingLink && (
+                            <Button variant="outline" size="sm" asChild>
+                              <a href={event.meetingLink} target="_blank" rel="noopener noreferrer">
+                                <Video className="h-4 w-4 mr-2" />
+                                Join Meeting
+                                <ExternalLink className="h-3 w-3 ml-1" />
+                              </a>
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+            {/* Sidebar */}
+            <div className="space-y-6">
+              {/* Quick Stats */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Quick Stats</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Total Events</span>
+                    <span className="font-semibold">{events.length}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">This Week</span>
+                    <span className="font-semibold">{upcomingEvents.length}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Job Fairs</span>
+                    <span className="font-semibold">{events.filter(e => e.type === 'job-fair').length}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Webinars</span>
+                    <span className="font-semibold">{events.filter(e => e.type === 'webinar').length}</span>
+                  </div>
+                </CardContent>
+              </Card>
+              {/* Upcoming Events */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Bell className="h-5 w-5" />
+                    Upcoming Events
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {upcomingEvents.length === 0 ? (
+                    <div className="text-center py-4 text-muted-foreground">
+                      <p className="text-sm">No upcoming events</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {upcomingEvents.map((event) => (
+                        <div key={event.id} className="border-l-4 border-job-primary pl-3 py-2">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h4 className="font-medium text-sm line-clamp-1">{event.title}</h4>
+                              <p className="text-xs text-muted-foreground">{formatEventDate(event.date)}</p>
+                            </div>
+                            <Badge variant="outline" className={`text-xs ${getEventTypeColor(event.type)}`}>
+                              {event.type === 'job-fair' ? 'Job Fair' : 'Webinar'}
+                            </Badge>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className={getEventTypeColor(event.type)}>
-                            {event.type === 'job-fair' ? 'Job Fair' : 'Webinar'}
-                          </Badge>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeEvent(event.id)}
-                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                      {event.description && (
-                        <p className="text-sm text-muted-foreground mb-3">{event.description}</p>
-                      )}
-                      {event.meetingLink && (
-                        <Button variant="outline" size="sm" asChild>
-                          <a href={event.meetingLink} target="_blank" rel="noopener noreferrer">
-                            <Video className="h-4 w-4 mr-2" />
-                            Join Meeting
-                            <ExternalLink className="h-3 w-3 ml-1" />
-                          </a>
-                        </Button>
-                      )}
+                      ))}
                     </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </div>
-
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Quick Stats */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Quick Stats</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Total Events</span>
-                <span className="font-semibold">{events.length}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">This Week</span>
-                <span className="font-semibold">{upcomingEvents.length}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Job Fairs</span>
-                <span className="font-semibold">{events.filter(e => e.type === 'job-fair').length}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Webinars</span>
-                <span className="font-semibold">{events.filter(e => e.type === 'webinar').length}</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Upcoming Events */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bell className="h-5 w-5" />
-                Upcoming Events
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {upcomingEvents.length === 0 ? (
-                <div className="text-center py-4 text-muted-foreground">
-                  <p className="text-sm">No upcoming events</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {upcomingEvents.map((event) => (
-                    <div key={event.id} className="border-l-4 border-job-primary pl-3 py-2">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h4 className="font-medium text-sm line-clamp-1">{event.title}</h4>
-                          <p className="text-xs text-muted-foreground">{formatEventDate(event.date)}</p>
-                        </div>
-                        <Badge variant="outline" className={`text-xs ${getEventTypeColor(event.type)}`}>
-                          {event.type === 'job-fair' ? 'Job Fair' : 'Webinar'}
-                        </Badge>
-                      </div>
+      )}
+      {view === 'create' && (
+        <div className="bg-white rounded-2xl shadow-xl p-8 min-h-[300px] max-w-xl mx-auto">
+          <h2 className="text-xl font-bold mb-4 text-indigo-700">Create a New Event</h2>
+          {/* Use the real event creation form here */}
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="title">Event Title</Label>
+              <Input
+                id="title"
+                value={newEvent.title}
+                onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
+                placeholder="Enter event title"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="type">Event Type</Label>
+              <Select
+                value={newEvent.type}
+                onValueChange={(value) => setNewEvent({ ...newEvent, type: value as 'job-fair' | 'webinar' })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="job-fair">Job Fair</SelectItem>
+                  <SelectItem value="webinar">Webinar</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="meetingLink">Meeting Link (Optional)</Label>
+              <Input
+                id="meetingLink"
+                value={newEvent.meetingLink}
+                onChange={(e) => setNewEvent({ ...newEvent, meetingLink: e.target.value })}
+                placeholder="https://meet.google.com/..."
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={newEvent.description}
+                onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
+                placeholder="Enter event description"
+                rows={3}
+              />
+            </div>
+          </div>
+          <div className="flex gap-2 mt-6">
+            <Button variant="outline" onClick={() => setView('calendar')}>Cancel</Button>
+            <Button onClick={handleCreateEvent} disabled={!newEvent.title}>Create Event</Button>
+          </div>
+        </div>
+      )}
+      {view === 'my-events' && (
+        <div className="bg-white rounded-2xl shadow-xl p-8 min-h-[300px] max-w-3xl mx-auto">
+          <h2 className="text-xl font-bold mb-4 text-indigo-700">My Events</h2>
+          {events.length === 0 ? (
+            <p className="text-slate-500">You have not created any events yet.</p>
+          ) : (
+            <div className="space-y-4">
+              {events.map((event) => (
+                <div key={event.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow flex flex-col md:flex-row md:items-center md:justify-between">
+                  <div className="flex items-center gap-3">
+                    {getEventTypeIcon(event.type)}
+                    <div>
+                      <h3 className="font-semibold text-lg">{event.title}</h3>
+                      <p className="text-sm text-muted-foreground">{formatEventDate(event.date)} &bull; {formatEventTime(event.date)}</p>
                     </div>
-                  ))}
+                  </div>
+                  <div className="flex items-center gap-2 mt-2 md:mt-0">
+                    <Badge variant="outline" className={getEventTypeColor(event.type)}>
+                      {event.type === 'job-fair' ? 'Job Fair' : 'Webinar'}
+                    </Badge>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeEvent(event.id)}
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              ))}
+            </div>
+          )}
+          <Button className="mt-6" onClick={() => setView('calendar')}>Back to Calendar</Button>
         </div>
-      </div>
+      )}
     </div>
   );
 };

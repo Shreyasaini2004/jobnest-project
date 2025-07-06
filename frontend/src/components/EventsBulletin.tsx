@@ -37,7 +37,9 @@ const EventsBulletin = () => {
   useEffect(() => {
     if (events.length > 0) {
       const startIdx = Math.min(scrollPosition, Math.max(0, events.length - 3));
-      setVisibleEvents(events.slice(startIdx, startIdx + 3));
+      const slicedEvents = events.slice(startIdx, startIdx + 3);
+      console.log('Visible events:', slicedEvents.map(e => ({ id: e.id, title: e.title })));
+      setVisibleEvents(slicedEvents);
       setIsLoading(false);
     } else if (events.length === 0 && !isLoading) {
       setIsLoading(false);
@@ -152,7 +154,7 @@ const EventsBulletin = () => {
           <div className="flex gap-2">
             {Array.from({ length: Math.ceil(events.length / 3) }, (_, i) => (
               <div
-                key={i}
+                key={`dot-${i}`}
                 className={`w-3 h-3 rounded-full transition-all duration-200 ${
                   i === Math.floor(scrollPosition / 3) 
                     ? 'bg-blue-500 scale-125' 
@@ -202,9 +204,9 @@ const EventsBulletin = () => {
               </div>
             </div>
           ) : (
-            visibleEvents.map((event) => (
+            visibleEvents.map((event, index) => (
               <Card 
-                key={event.id} 
+                key={`${event.id || `event-${index}`}-${index}`} 
                 className="group relative overflow-hidden border-0 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-white"
               >
                 {/* Event Type Indicator */}

@@ -2,442 +2,370 @@ import { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Edit, Mail, User, Briefcase, Save, XCircle, Phone, MapPin, GraduationCap, Camera, ArrowLeft } from 'lucide-react';
+import { Edit, Mail, User, Briefcase, Save, XCircle, Phone, MapPin, GraduationCap, Camera, ArrowLeft, Share2, Download, Upload, Copy, Check } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import axiosInstance from '@/lib/axios';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function ProfilePage() {
-  const { user, setUser } = useUser();
-  const [editMode, setEditMode] = useState(false);
-  const [form, setForm] = useState({
-    firstName: user?.firstName || '',
-    lastName: user?.lastName || '',
-    email: user?.email || '',
-    phone: user?.phone || '',
-    location: user?.location || '',
-    experience: user?.experience || '',
-    education: user?.education || '',
-    skills: user?.skills || '',
-    bio: user?.bio || '',
-    avatar: user?.avatar || '',
-  });
-  const [avatarHover, setAvatarHover] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState('');
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const toastRef = useRef<HTMLDivElement>(null);
-  const confettiRef = useRef<HTMLDivElement>(null);
+  const { user } = useUser();
+  const { toast } = useToast();
   const navigate = useNavigate();
+  const initials = (user?.firstName || 'U')[0]?.toUpperCase() + (user?.lastName || '')[0]?.toUpperCase();
 
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+  // Profile completion calculation (simple example: count filled fields)
+  const profileFields = ['firstName', 'lastName', 'email', 'phone', 'location', 'experience', 'education', 'skills', 'bio'];
+  const completedFields = profileFields.filter(f => user?.[f]);
+  const profileCompletion = Math.round((completedFields.length / profileFields.length) * 100);
 
-  const initials = (form.firstName || user?.firstName || 'U')[0]?.toUpperCase() + (form.lastName || user?.lastName || '')[0]?.toUpperCase();
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  // Share profile handler
+  const handleShare = () => {
+    const url = window.location.origin + '/profile/' + (user?._id || '');
+    navigator.clipboard.writeText(url);
+    toast({ title: 'Profile link copied!', description: 'You can now share your profile.' });
   };
 
-  const handleSelectChange = (field: string, value: string) => {
-    setForm({ ...form, [field]: value });
+  // Download resume handler (placeholder)
+  const handleDownloadResume = () => {
+    toast({ title: 'Resume downloaded', description: 'Your resume has been downloaded.' });
   };
 
-  const handleSave = () => {
-    setUser({ ...user, ...form });
-    setEditMode(false);
-    showToast('Profile updated successfully!', 'success');
-    showConfetti();
+  // Calculate profile completion percentage
+  const calculateProfileCompletion = () => {
+    if (!user) return 0;
+    const fields = ['firstName', 'lastName', 'phone', 'location', 'experience', 'education', 'skills', 'bio'];
+    const completedFields = fields.filter(field => user[field as keyof typeof user] && user[field as keyof typeof user] !== '');
+    return Math.round((completedFields.length / fields.length) * 100);
   };
 
-  // Handle avatar upload
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log("File selected", e.target.files);
-    const file = e.target.files?.[0];
-    if (!file) {
-      console.error('No file selected');
-      return;
-    }
-    
-    // Check if user exists and has an ID
-    if (!user) {
-      console.error('No user available');
-      return;
-    }
-    
-    if (!user._id) {
-      console.error('No user ID available');
-      return;
-    }
-    
-    console.log('User object:', user);
-    console.log('User ID:', user._id);
-    console.log('File name:', file.name);
-    console.log('File size:', file.size);
-    console.log('File type:', file.type);
-    
-    setUploading(true);
-    setUploadError('');
-    
-    try {
-      // Create form data
-      const formData = new FormData();
-      formData.append('avatar', file);
-      formData.append('userId', user._id);
-      
-      // Log form data contents
-      console.log('Form data entries:');
-      for (const pair of formData.entries()) {
-        console.log(pair[0], pair[1]);
-      }
-      
-      // Direct fetch approach as a fallback
-      console.log('Using direct fetch with URL:', `${backendUrl}/api/auth/users/upload-avatar`);
-      
-      // Make the request using fetch instead of axios
-      const response = await fetch(`${backendUrl}/api/auth/users/upload-avatar`, {
-        method: 'POST',
-        body: formData,
-        // No need to set Content-Type header with fetch API for FormData
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Upload failed');
-      }
-      
-      const data = await response.json();
-      console.log('Response received:', data);
-      const avatarUrl = data.avatar;
-      console.log('Avatar URL from response:', avatarUrl);
-      
-      // Update local state and user context
-      setForm(f => ({ ...f, avatar: avatarUrl }));
-      setUser({ ...user, avatar: avatarUrl });
-      console.log('Avatar uploaded successfully:', avatarUrl);
-      console.log('Updated user object:', { ...user, avatar: avatarUrl });
-    } catch (err: any) {
-      console.error('Failed to upload image:', err);
-      setUploadError(`Failed to upload image: ${err.message}`);
-    } finally {
-      setUploading(false);
-    }
-  };
+  const completionPercentage = calculateProfileCompletion();
+  const missingFields = ['skills', 'location', 'education'].filter(field => !user?.[field as keyof typeof user]);
 
-  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
-    if (!toastRef.current) return;
-    toastRef.current.innerText = message;
-    toastRef.current.className = `toast toast-container toast-${type}`;
-    toastRef.current.style.opacity = '1';
-    toastRef.current.style.pointerEvents = 'auto';
-    setTimeout(() => {
-      if (toastRef.current) {
-        toastRef.current.style.opacity = '0';
-        toastRef.current.style.pointerEvents = 'none';
-      }
-    }, 2500);
-  };
+  // Mock skills data
+  const skills = user?.skills ? user.skills.split(',').map(skill => skill.trim()) : ['React', 'Node.js', 'MongoDB', 'UI/UX Design'];
 
-  const showConfetti = () => {
-    if (!confettiRef.current) return;
-    confettiRef.current.innerHTML = '';
-    const colors = ['#6366f1', '#22d3ee', '#f472b6', '#facc15', '#22c55e', '#3b82f6'];
-    for (let i = 0; i < 24; i++) {
-      const el = document.createElement('div');
-      el.className = 'confetti-piece';
-      el.style.left = `${Math.random() * 100}%`;
-      el.style.background = colors[Math.floor(Math.random() * colors.length)];
-      el.style.animationDelay = `${Math.random() * 0.5}s`;
-      confettiRef.current.appendChild(el);
-    }
-    setTimeout(() => { if (confettiRef.current) confettiRef.current.innerHTML = ''; }, 2000);
-  };
+  // Mock achievements
+  const achievements = [
+    { id: 1, title: 'Uploaded First Resume', icon: '📄', earned: true },
+    { id: 2, title: 'Applied to 5 Jobs', icon: '📩', earned: true },
+    { id: 3, title: 'Profile 100% Complete', icon: '🏆', earned: completionPercentage === 100 },
+  ];
 
   return (
-    <div className="min-h-screen settings-bg-animated bg-background fade-in">
-      <div ref={confettiRef} className="confetti-container" />
-      <div ref={toastRef} className="toast toast-container" style={{opacity: 0, pointerEvents: 'none', position: 'fixed', top: '2rem', right: '2rem'}}></div>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-100 fade-in">
       <div className="max-w-3xl mx-auto py-10 px-4 space-y-8">
-        <div className="mb-4 flex flex-col items-start">
+        <style>
+          {`
+            @keyframes fadeSlideInLeft {
+              0% { opacity: 0; transform: translateX(-24px); }
+              100% { opacity: 1; transform: translateX(0); }
+            }
+          `}
+        </style>
+        {/* Left-aligned, soft dashboard button above cover */}
+        <div className="flex justify-start mb-6">
           <button
             onClick={() => navigate('/dashboard?section=dashboard-home')}
-            className="flex items-center gap-2 px-4 py-2 rounded-full border border-job-secondary/60 bg-job-secondary/70 dark:bg-[#23263A]/60 shadow-sm hover:bg-job-primary/10 dark:hover:bg-job-primary/20 text-job-primary dark:text-job-accent font-semibold transition-all settings-btn-animated settings-focus-glow focus-visible:ring-2 focus-visible:ring-job-primary focus-visible:ring-offset-2 fade-in animate-slide-in-left"
-            title="Back to Dashboard"
-            aria-label="Back to Dashboard"
+            className="flex items-center gap-2 px-5 py-2 rounded-xl bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-700 font-medium shadow hover:bg-indigo-200 hover:text-indigo-900 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-200 text-base"
+            aria-label="Dashboard"
             tabIndex={0}
-            style={{ animationDelay: '0.1s' }}
           >
-            <ArrowLeft className="w-5 h-5 icon-animate-bounce" />
+            <ArrowLeft className="w-5 h-5" />
             <span className="hidden sm:inline">Dashboard</span>
           </button>
-          <div className="w-full h-px bg-border/60 my-4" />
         </div>
-        {/* Gradient Header */}
-        <div className="rounded-2xl bg-gradient-to-r from-blue-400 via-purple-400 to-blue-300 p-8 flex flex-col sm:flex-row items-center gap-6 shadow-xl mb-8 relative">
-          {/* Custom Avatar */}
-          <div
-            className={`relative group h-28 w-28 flex items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-400 shadow-lg border-4 border-white transition-all duration-300 cursor-pointer overflow-hidden`}
-            onMouseEnter={() => setAvatarHover(true)}
-            onMouseLeave={() => setAvatarHover(false)}
-            tabIndex={0}
-            aria-label="Profile Picture"
-            onClick={() => fileInputRef.current && fileInputRef.current.click()}
-          >
-            {form.avatar ? (
-              <>
-                <img
-                  src={form.avatar}
-                  alt="Profile"
-                  className="object-cover w-full h-full absolute inset-0"
-                  onLoad={() => console.log('Image loaded successfully:', form.avatar)}
-                  onError={(e) => {
-                    console.error('Image failed to load:', form.avatar);
-                    e.currentTarget.onerror = null; // Prevent infinite loop
-                    e.currentTarget.src = ''; // Clear the src
-                    // Fall back to initials
-                    e.currentTarget.style.display = 'none';
-                    // Show the initials as fallback
-                    setForm(prev => ({ ...prev, avatar: '' }));
-                  }}
-                />
-                {/* Debug info */}
-                <div className="hidden">
-                  Avatar path: {form.avatar}<br/>
-                  Full URL: {form.avatar.startsWith('http') ? form.avatar : `${backendUrl}${form.avatar}`}
+        {/* Hero Section with Cover Image */}
+        <div className="relative rounded-2xl overflow-hidden shadow-xl mb-8">
+          {/* Cover image without blur effect */}
+          <div className="h-40 md:h-56 w-full bg-cover bg-center relative" style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80)' }}></div>
+          {/* Centered avatar, name, and title */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
+            <div>
+              <img src={user?.avatar} className="w-24 h-24 rounded-full border-4 border-white shadow-lg object-cover bg-white" />
                 </div>
-              </>
-            ) : (
-              <span className="text-5xl font-bold text-white select-none">{initials}</span>
-            )}
-            {/* Upload button on hover */}
-            <button
-              type="button"
-              onClick={e => { e.stopPropagation(); fileInputRef.current && fileInputRef.current.click(); }}
-              className={`absolute inset-0 flex items-center justify-center bg-black/60 rounded-full transition-opacity duration-200 ${avatarHover ? 'opacity-100' : 'opacity-0'} focus-visible:opacity-100`}
-              aria-label="Upload Photo"
-            >
-              {uploading ? (
-                <span className="text-white text-sm">Uploading...</span>
-              ) : (
-                <Camera className="h-8 w-8 text-white" />
-              )}
-            </button>
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              aria-label="Choose profile photo"
-            />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h2 className="text-3xl font-bold text-white mb-1 flex items-center gap-2 flex-wrap">
-              {form.firstName || user?.firstName || 'Your Name'} {form.lastName || user?.lastName || ''}
-              <span className="inline-block px-3 py-1 rounded-full bg-white/20 text-white text-xs font-semibold ml-2">
-                {user?.userType === 'employer' ? 'Employer' : 'Job Seeker'}
-              </span>
-            </h2>
-            <div className="flex items-center gap-2 text-white/90 flex-wrap">
-              <Mail className="h-5 w-5" />
-              <span className="truncate">{form.email || user?.email || 'your@email.com'}</span>
+            <div className="flex flex-col items-center mt-4">
+              <h2 className="text-2xl font-bold text-white drop-shadow mb-1">{user?.firstName} {user?.lastName}</h2>
+              <p className="text-white text-sm opacity-90">{user?.userType === 'employer' ? 'Employer' : 'Job Seeker'}</p>
             </div>
           </div>
-          <div className="mt-4 sm:mt-0">
-            {!editMode && (
-              <Button variant="outline" className="bg-white/90 text-blue-600 border-blue-200 hover:bg-white shadow font-semibold focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2" onClick={() => setEditMode(true)}>
-                <Edit className="h-4 w-4 mr-1" /> Edit Profile
-              </Button>
-            )}
+        </div>
+        <div className="h-14 sm:h-16" /> {/* Spacer for avatar overlay, responsive */}
+        {/* About Me snippet */}
+        <div className="max-w-2xl mx-auto mb-8 px-2 sm:px-0">
+          <div className="bg-white rounded-xl shadow p-4 sm:p-6 text-center border border-gray-100">
+            <h3 className="text-base sm:text-lg font-semibold text-indigo-700 mb-2">About Me</h3>
+            <p className="text-gray-700 text-sm sm:text-base min-h-[2.5rem]">
+              {user?.bio ? user.bio : <span className="text-gray-400">No bio provided yet.</span>}
+            </p>
           </div>
         </div>
-
-        {/* Editable Card */}
-        <Card className="rounded-2xl shadow-lg border-0">
-          <CardHeader>
-            <CardTitle>Personal & Professional Information</CardTitle>
+        {/* Pinned Projects / Highlights */}
+        <div className="max-w-2xl mx-auto mb-8 px-2 sm:px-0">
+          <div className="bg-white rounded-xl shadow p-4 sm:p-6 border border-gray-100 hover:shadow-lg transition-shadow duration-200">
+            <h3 className="text-base sm:text-lg font-semibold text-indigo-700 mb-4 text-center">Pinned Projects</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Example static projects - replace with dynamic content in the future */}
+              <div className="bg-indigo-50 rounded-lg p-3 sm:p-4 shadow-sm flex flex-col gap-2 hover:shadow-md hover:scale-105 transition-all duration-200 cursor-pointer">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-indigo-800 text-sm sm:text-base">JobNest ATS Analyzer</span>
+                  <span className="text-xs text-indigo-600">🚀</span>
+                  </div>
+                <span className="text-gray-600 text-xs sm:text-sm">A smart resume and job description analyzer for job seekers and employers.</span>
+                <div className="flex flex-wrap gap-1 mt-2">
+                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">#React</span>
+                  <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">#AI</span>
+                  <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">#Node.js</span>
+                </div>
+                <a href="#" className="text-indigo-600 text-xs font-medium hover:underline mt-2">View Project →</a>
+                  </div>
+              <div className="bg-indigo-50 rounded-lg p-3 sm:p-4 shadow-sm flex flex-col gap-2 hover:shadow-md hover:scale-105 transition-all duration-200 cursor-pointer">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-indigo-800 text-sm sm:text-base">Event Bulletin Board</span>
+                  <span className="text-xs text-indigo-600">📅</span>
+                </div>
+                <span className="text-gray-600 text-xs sm:text-sm">A real-time events and deadlines dashboard for job seekers.</span>
+                <div className="flex flex-wrap gap-1 mt-2">
+                  <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full">#Firebase</span>
+                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">#React</span>
+                  <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">#TypeScript</span>
+                </div>
+                <a href="#" className="text-indigo-600 text-xs font-medium hover:underline mt-2">View Project →</a>
+                  </div>
+              {/* Placeholder for no projects */}
+              {/* <div className="col-span-full text-gray-400 text-center">No pinned projects yet.</div> */}
+                  </div>
+                </div>
+                </div>
+        {/* Info Card */}
+        <Card className="rounded-2xl shadow-lg border-0 max-w-2xl mx-auto mb-8 px-2 sm:px-0 hover:shadow-xl transition-shadow duration-200">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-base sm:text-lg">Personal & Professional Information</CardTitle>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => navigate('/settings?tab=profile')}
+              className="hover:bg-indigo-50 hover:text-indigo-700 transition-colors duration-200"
+            >
+              <Edit className="w-4 h-4 mr-1" />
+              Edit
+                  </Button>
           </CardHeader>
           <CardContent>
-            {editMode ? (
-              <form className="space-y-8 max-w-2xl mx-auto">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="firstName">First Name</Label>
-                    <Input
-                      id="firstName"
-                      name="firstName"
-                      value={form.firstName}
-                      onChange={handleChange}
-                      placeholder="Enter your first name"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="lastName">Last Name</Label>
-                    <Input
-                      id="lastName"
-                      name="lastName"
-                      value={form.lastName}
-                      onChange={handleChange}
-                      placeholder="Enter your last name"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email Address</Label>
-                    <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      value={form.email}
-                      onChange={handleChange}
-                      placeholder="your@email.com"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number</Label>
-                    <Input
-                      id="phone"
-                      name="phone"
-                      type="tel"
-                      value={form.phone}
-                      onChange={handleChange}
-                      placeholder="+1 (555) 000-0000"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="location">Location</Label>
-                  <Input
-                    id="location"
-                    name="location"
-                    value={form.location}
-                    onChange={handleChange}
-                    placeholder="City, State, Country"
-                  />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="experience">Years of Experience</Label>
-                    <Select value={form.experience} onValueChange={value => handleSelectChange('experience', value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select your experience level" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="0-1">0-1 years</SelectItem>
-                        <SelectItem value="2-3">2-3 years</SelectItem>
-                        <SelectItem value="4-5">4-5 years</SelectItem>
-                        <SelectItem value="6-10">6-10 years</SelectItem>
-                        <SelectItem value="10+">10+ years</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="education">Education</Label>
-                    <Select value={form.education} onValueChange={value => handleSelectChange('education', value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select your education level" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="high-school">High School</SelectItem>
-                        <SelectItem value="associate">Associate Degree</SelectItem>
-                        <SelectItem value="bachelor">Bachelor's Degree</SelectItem>
-                        <SelectItem value="master">Master's Degree</SelectItem>
-                        <SelectItem value="phd">PhD</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="skills">Skills</Label>
-                  <Input
-                    id="skills"
-                    name="skills"
-                    value={form.skills}
-                    onChange={handleChange}
-                    placeholder="e.g., React, Node.js, Python, Project Management"
-                  />
-                  <p className="text-xs text-muted-foreground">Separate skills with commas</p>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="bio">Professional Bio</Label>
-                  <Textarea
-                    id="bio"
-                    name="bio"
-                    value={form.bio}
-                    onChange={handleChange}
-                    placeholder="Tell us about yourself, your experience, and what you're looking for..."
-                    rows={4}
-                  />
-                  <p className="text-xs text-muted-foreground">This will be visible to potential employers</p>
-                </div>
-                <div className="flex gap-4 justify-end mt-6">
-                  <Button type="button" variant="outline" onClick={() => setEditMode(false)}>
-                    <XCircle className="h-4 w-4 mr-1" /> Cancel
-                  </Button>
-                  <Button type="button" onClick={handleSave}>
-                    <Save className="h-4 w-4 mr-1" /> Save Changes
-                  </Button>
-                </div>
-              </form>
-            ) : (
               <div className="space-y-6 py-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
                   <div className="space-y-4">
                     <div>
                       <div className="text-muted-foreground text-xs mb-1 flex items-center gap-1"><User className="h-4 w-4" /> First Name</div>
-                      <div className="font-semibold text-blue-900 text-base">{form.firstName || <span className="text-gray-400">-</span>}</div>
+                    <div className="font-semibold text-blue-900 text-sm sm:text-base">{user?.firstName || <span className="text-gray-400">-</span>}</div>
                     </div>
                     <div>
                       <div className="text-muted-foreground text-xs mb-1 flex items-center gap-1"><Mail className="h-4 w-4" /> Email Address</div>
-                      <div className="font-semibold text-blue-900 text-base">{form.email || <span className="text-gray-400">-</span>}</div>
+                    <div className="font-semibold text-blue-900 text-sm sm:text-base">{user?.email || <span className="text-gray-400">-</span>}</div>
                     </div>
                     <div>
                       <div className="text-muted-foreground text-xs mb-1 flex items-center gap-1"><MapPin className="h-4 w-4" /> Location</div>
-                      <div className="text-base">{form.location || <span className="text-gray-400">-</span>}</div>
+                    <div className="text-sm sm:text-base flex items-center gap-2">
+                      {user?.location || <span className="text-gray-400">-</span>}
+                      <Edit className="w-3 h-3 text-gray-400 hover:text-indigo-600 cursor-pointer transition-colors duration-200" />
+                    </div>
                     </div>
                     <div>
                       <div className="text-muted-foreground text-xs mb-1 flex items-center gap-1"><GraduationCap className="h-4 w-4" /> Education</div>
-                      <div className="text-base">{form.education || <span className="text-gray-400">-</span>}</div>
+                    <div className="text-sm sm:text-base flex items-center gap-2">
+                      {user?.education || <span className="text-gray-400">-</span>}
+                      <Edit className="w-3 h-3 text-gray-400 hover:text-indigo-600 cursor-pointer transition-colors duration-200" />
+                    </div>
                     </div>
                     <div>
                       <div className="text-muted-foreground text-xs mb-1 flex items-center gap-1"><Briefcase className="h-4 w-4" /> Experience</div>
-                      <div className="text-base">{form.experience || <span className="text-gray-400">-</span>}</div>
+                    <div className="text-sm sm:text-base flex items-center gap-2">
+                      {user?.experience || <span className="text-gray-400">-</span>}
+                      <Edit className="w-3 h-3 text-gray-400 hover:text-indigo-600 cursor-pointer transition-colors duration-200" />
+                    </div>
                     </div>
                   </div>
                   <div className="space-y-4">
                     <div>
                       <div className="text-muted-foreground text-xs mb-1 flex items-center gap-1"><User className="h-4 w-4" /> Last Name</div>
-                      <div className="font-semibold text-blue-900 text-base">{form.lastName || <span className="text-gray-400">-</span>}</div>
+                    <div className="font-semibold text-blue-900 text-sm sm:text-base">{user?.lastName || <span className="text-gray-400">-</span>}</div>
                     </div>
                     <div>
                       <div className="text-muted-foreground text-xs mb-1 flex items-center gap-1"><Phone className="h-4 w-4" /> Phone Number</div>
-                      <div className="text-base">{form.phone || <span className="text-gray-400">-</span>}</div>
+                    <div className="text-sm sm:text-base">{user?.phone || <span className="text-gray-400">-</span>}</div>
                     </div>
                     <div>
                       <div className="text-muted-foreground text-xs mb-1 flex items-center gap-1"><User className="h-4 w-4" /> Skills</div>
-                      <div className="text-base">{form.skills ? form.skills.split(',').map(skill => <span key={skill} className="inline-block bg-blue-100 text-blue-700 rounded-full px-2 py-0.5 text-xs mr-1 mb-1">{skill.trim()}</span>) : <span className="text-gray-400">-</span>}</div>
+                    <div className="text-sm sm:text-base">{user?.skills ? user.skills.split(',').map(skill => <span key={skill} className="inline-block bg-blue-100 text-blue-700 rounded-full px-2 py-0.5 text-xs mr-1 mb-1">{skill.trim()}</span>) : <span className="text-gray-400">-</span>}</div>
                     </div>
                     <div>
                       <div className="text-muted-foreground text-xs mb-1 flex items-center gap-1"><User className="h-4 w-4" /> Professional Bio</div>
-                      <div className="text-base">{form.bio || <span className="text-gray-400">-</span>}</div>
-                    </div>
+                    <div className="text-sm sm:text-base">{user?.bio || <span className="text-gray-400">-</span>}</div>
                   </div>
                 </div>
               </div>
-            )}
+            </div>
           </CardContent>
         </Card>
-
-        {/* Recent Activity Card */}
-        <Card>
+        {/* Stat Widgets */}
+        <div className="max-w-2xl mx-auto mb-8 px-2 sm:px-0">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center border border-gray-100 hover:shadow-lg hover:scale-105 transition-all duration-200">
+              <span className="text-2xl mb-1">👥</span>
+              <span className="text-xl font-bold text-indigo-700">120</span>
+              <span className="text-xs text-gray-500">Followers</span>
+            </div>
+            <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center border border-gray-100 hover:shadow-lg hover:scale-105 transition-all duration-200">
+              <span className="text-2xl mb-1">📈</span>
+              <span className="text-xl font-bold text-indigo-700">75</span>
+              <span className="text-xs text-gray-500">Following</span>
+            </div>
+            <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center border border-gray-100 hover:shadow-lg hover:scale-105 transition-all duration-200">
+              <span className="text-2xl mb-1">💼</span>
+              <span className="text-xl font-bold text-indigo-700">3</span>
+              <span className="text-xs text-gray-500">Projects</span>
+            </div>
+            <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center border border-gray-100 hover:shadow-lg hover:scale-105 transition-all duration-200">
+              <span className="text-2xl mb-1">👁️</span>
+              <span className="text-xl font-bold text-indigo-700">1,024</span>
+              <span className="text-xs text-gray-500">Profile Views</span>
+            </div>
+          </div>
+        </div>
+        {/* Timeline / Activity Feed */}
+        <div className="max-w-2xl mx-auto mb-8 px-2 sm:px-0">
+          <div className="bg-white rounded-xl shadow p-6 border border-gray-100 hover:shadow-lg transition-shadow duration-200">
+            <h3 className="text-base sm:text-lg font-semibold text-indigo-700 mb-4">Timeline</h3>
+            <ul className="space-y-3 text-sm">
+              <li className="flex items-center gap-3">
+                <span className="text-lg">✅</span>
+                <span>Joined on <span className="font-semibold">{user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}</span></span>
+              </li>
+              <li className="flex items-center gap-3">
+                <span className="text-lg">🔄</span>
+                <span>Updated profile <span className="font-semibold">2 days ago</span></span>
+              </li>
+              <li className="flex items-center gap-3">
+                <span className="text-lg">🚀</span>
+                <span>Applied to <span className="font-semibold">2 jobs</span> last week</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+        {/* Custom URL and QR Code */}
+        <div className="max-w-2xl mx-auto mb-8 px-2 sm:px-0">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Custom URL */}
+            <div className="bg-white rounded-xl shadow p-6 border border-gray-100">
+              <h3 className="text-base sm:text-lg font-semibold text-indigo-700 mb-4">Profile URL</h3>
+              <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+                              <span className="text-sm text-gray-600 flex-1 truncate">
+                {window.location.origin}/profile/{user?._id || 'user'}
+              </span>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  navigator.clipboard.writeText(`${window.location.origin}/profile/${user?._id || 'user'}`);
+                  toast({
+                    title: "✅ Copied!",
+                    description: "Profile URL has been copied to clipboard.",
+                  });
+                }}
+                className="hover:bg-green-50 hover:text-green-700 transition-colors duration-200"
+              >
+                <Copy className="w-4 h-4 mr-1" />
+                Copy
+              </Button>
+              </div>
+            </div>
+            {/* QR Code */}
+            <div className="bg-white rounded-xl shadow p-6 border border-gray-100 hover:shadow-lg transition-shadow duration-200">
+              <h3 className="text-base sm:text-lg font-semibold text-indigo-700 mb-4">QR Code</h3>
+              <div className="flex flex-col items-center gap-4">
+                <Tooltip>
+                  <TooltipTrigger>
+                    <div className="w-24 h-24 bg-gray-200 rounded-lg flex items-center justify-center cursor-help">
+                      <span className="text-xs text-gray-500">QR Code</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Scan to view public profile</p>
+                  </TooltipContent>
+                </Tooltip>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    toast({
+                      title: "QR Code downloaded!",
+                      description: "QR code has been saved to your device.",
+                    });
+                  }}
+                  className="hover:bg-indigo-50 transition-colors duration-200"
+                >
+                  Download QR
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* Resume Section */}
+        <Card className="rounded-2xl shadow-lg border-0 max-w-2xl mx-auto mb-8 px-2 sm:px-0 hover:shadow-xl transition-shadow duration-200">
           <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
+            <CardTitle className="text-base sm:text-lg">Resume</CardTitle>
           </CardHeader>
           <CardContent>
-            <ul className="space-y-2 text-muted-foreground text-sm">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                  <Download className="w-5 h-5 text-indigo-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">Resume.pdf</p>
+                  <p className="text-sm text-gray-500">Last updated 2 days ago</p>
+                </div>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button onClick={handleDownloadResume} variant="outline" size="sm" className="hover:bg-indigo-50 transition-colors duration-200">
+                      <Download className="w-4 h-4 mr-1" />
+                      Download
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Download your resume as PDF</p>
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="outline" size="sm" className="hover:bg-green-50 transition-colors duration-200">
+                      <Upload className="w-4 h-4 mr-1" />
+                      Upload
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Upload a new resume (PDF, DOC, DOCX)</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        {/* Recent Activity Card */}
+        <Card className="rounded-2xl shadow-lg border-0 max-w-2xl mx-auto px-2 sm:px-0 hover:shadow-xl transition-shadow duration-200">
+          <CardHeader>
+            <CardTitle className="text-base sm:text-lg">Recent Activity</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2 text-muted-foreground text-xs sm:text-sm">
               <li>Jobs applied: <span className="font-semibold">5</span></li>
               <li>Resumes uploaded: <span className="font-semibold">2</span></li>
               <li>Saved jobs: <span className="font-semibold">8</span></li>
@@ -445,6 +373,65 @@ export default function ProfilePage() {
             </ul>
           </CardContent>
         </Card>
+        {/* Top Skills Section */}
+        {skills.length > 0 && (
+          <div className="max-w-2xl mx-auto mb-8 px-2 sm:px-0">
+            <div className="bg-white rounded-xl shadow p-6 border border-gray-100 hover:shadow-lg transition-shadow duration-200">
+              <h3 className="text-base sm:text-lg font-semibold text-indigo-700 mb-4">Top Skills</h3>
+              <div className="flex flex-wrap gap-2">
+                {skills.map((skill, index) => (
+                  <Badge 
+                    key={index} 
+                    variant="outline" 
+                    className="bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 transition-colors duration-200"
+                  >
+                    🔹 {skill}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+        {/* Achievements Section */}
+        <div className="max-w-2xl mx-auto mb-8 px-2 sm:px-0">
+          <div className="bg-white rounded-xl shadow p-6 border border-gray-100 hover:shadow-lg transition-shadow duration-200">
+            <h3 className="text-base sm:text-lg font-semibold text-indigo-700 mb-4">Achievements</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                              {achievements.map((achievement) => (
+                  <Tooltip key={achievement.id}>
+                    <TooltipTrigger asChild>
+                      <div 
+                        className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-200 cursor-help ${
+                          achievement.earned 
+                            ? 'bg-green-50 border border-green-200 hover:bg-green-100' 
+                            : 'bg-gray-50 border border-gray-200 opacity-50'
+                        }`}
+                      >
+                        <span className="text-2xl">{achievement.icon}</span>
+                        <div>
+                          <p className={`text-sm font-medium ${
+                            achievement.earned ? 'text-green-800' : 'text-gray-500'
+                          }`}>
+                            {achievement.title}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {achievement.earned ? 'Earned' : 'Locked'}
+                          </p>
+                        </div>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>
+                        {achievement.id === 1 && 'Upload your first resume to earn this badge'}
+                        {achievement.id === 2 && 'Apply to 5 jobs to earn this badge'}
+                        {achievement.id === 3 && 'Complete all profile fields to earn this badge'}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

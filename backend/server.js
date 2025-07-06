@@ -3,19 +3,21 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 const cookieParser = require('cookie-parser');
-require('dotenv').config();
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const authRoutes = require('./routes/auth');
 const jobRoutes = require('./routes/jobs');
 const applicationRoutes = require('./routes/applications');
 const userRoutes = require('./routes/users');
 const eventRoutes = require('./routes/events');
+const atsRouter = require('./routes/ats');
 
 const app = express();
 app.use(cors({
   origin: [
     'http://localhost:5173', // Vite/React dev server
     'http://localhost:8080', // Alternate frontend port
+    'http://localhost:3000', // Another common frontend port
   ],
   credentials: true,
 }));
@@ -51,6 +53,7 @@ app.use("/api/jobs", jobRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/events', eventRoutes);
+app.use('/api/ats', atsRouter);
 
 // ✅ Add this route for frontend testing
 app.get('/api/hello', (req, res) => {
