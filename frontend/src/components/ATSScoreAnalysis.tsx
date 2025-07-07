@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Upload, FileText, Target, Save, Download, CheckCircle, AlertCircle, Info, Mail } from "lucide-react";
+import { Upload, FileText, Target, Save, Download, CheckCircle, AlertCircle, Info, Mail, Copy, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,7 +12,6 @@ import { ResumeParser, ParsedResume, JobDescription, KeywordAnalysis } from "@/l
 import { useATSAnalysis } from "@/contexts/ATSAnalysisContext";
 import axios from 'axios';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { Copy, Loader2, X } from 'lucide-react';
 import jsPDF from 'jspdf';
 
 interface ATSScore {
@@ -67,13 +66,16 @@ const ATSScoreAnalysis = () => {
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      if (file.type === 'application/pdf' || file.type === 'application/msword' || 
-          file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
-          file.type === 'text/plain') {
+      if (
+        file.type === 'application/pdf' ||
+        file.type === 'application/msword' ||
+        file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+        file.type === 'text/plain'
+      ) {
         setResumeFile(file);
         toast({
-          title: "File uploaded successfully",
-          description: `${file.name} has been uploaded.`,
+          title: "File uploaded",
+          description: file.name,
         });
       } else {
         toast({
@@ -89,20 +91,10 @@ const ATSScoreAnalysis = () => {
     if (!resumeFile) {
       throw new Error('No resume file provided');
     }
-
-    // Parse resume using the ResumeParser service
     const parsedResume = await ResumeParser.parseResume(resumeFile);
-    
-    // Parse job description
     const parsedJobDescription = ResumeParser.parseJobDescription(jdText);
-    
-    // Analyze keywords
     const keywordAnalysis = ResumeParser.analyzeKeywords(parsedResume, parsedJobDescription);
-    
-    // Calculate comprehensive ATS score
     const overallScore = ResumeParser.calculateATSScore(parsedResume, parsedJobDescription);
-    
-    // Create detailed score breakdown
     const score: ATSScore = {
       overall: overallScore,
       keywordMatch: keywordAnalysis.score,
@@ -110,15 +102,12 @@ const ATSScoreAnalysis = () => {
       experienceMatch: Math.round((parsedResume.extractedData.experience.length / 5) * 100),
       educationMatch: Math.round((parsedResume.extractedData.education.length / 3) * 100)
     };
-
-    // Create keyword matches for display
     const keywordMatches: KeywordMatch[] = parsedJobDescription.keywords.map(keyword => ({
       keyword,
       found: keywordAnalysis.matched.includes(keyword),
       count: (parsedResume.text.toLowerCase().match(new RegExp(keyword, 'g')) || []).length,
       importance: Math.random() > 0.5 ? 'high' : Math.random() > 0.3 ? 'medium' : 'low'
     }));
-
     return {
       score,
       keywordMatches,
@@ -141,18 +130,13 @@ const ATSScoreAnalysis = () => {
       });
       return;
     }
-
     setIsProcessing(true);
     setStep('processing');
-
     try {
-      // Simulate processing time for better UX
       await new Promise(resolve => setTimeout(resolve, 3000));
-      
       const result = await analyzeResume();
       setAnalysisResult(result);
       setStep('results');
-      
       toast({
         title: "Analysis complete",
         description: `Your ATS score is ${result.score.overall}%`,
@@ -170,202 +154,6 @@ const ATSScoreAnalysis = () => {
     }
   };
 
-  const handleSaveToDashboard = () => {
-    if (!analysisResult || !resumeFile) return;
-
-    saveAnalysis({
-      resumeFileName: resumeFile.name,
-      jobDescription: jdText,
-      score: analysisResult.score.overall,
-      keywordMatches: analysisResult.keywordAnalysis.matched,
-      missingKeywords: analysisResult.keywordAnalysis.missing,
-      suggestions: analysisResult.keywordAnalysis.suggestions,
-    });
-
-    toast({
-      title: "Saved to dashboard",
-      description: "Your analysis has been saved to your dashboard.",
-    });
-  };
-
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return "text-green-600";
-    if (score >= 60) return "text-yellow-600";
-    return "text-red-600";
-  };
-
-  const getScoreBadgeColor = (score: number) => {
-    if (score >= 80) return "bg-green-100 text-green-800";
-    if (score >= 60) return "bg-yellow-100 text-yellow-800";
-    return "bg-red-100 text-red-800";
-  };
-
-  const renderScoreBreakdown = () => {
-    if (!analysisResult) return null;
-
-    return (
-      <div className="space-y-6">
-        {/* Overall Score */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border border-blue-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">Overall ATS Score</h3>
-              <p className="text-sm text-gray-600 mt-1">
-                Based on skills match, experience, education, format, and role fit
-              </p>
-            </div>
-            <div className="text-right">
-              <div className={`text-3xl font-bold ${getScoreColor(analysisResult.score.overall)}`}>
-                {analysisResult.score.overall}%
-              </div>
-              <div className="text-sm text-gray-500 mt-1">
-                {analysisResult.score.overall >= 80 ? 'Excellent' : 
-                 analysisResult.score.overall >= 60 ? 'Good' : 'Needs Improvement'}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Enhanced Score Breakdown */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Skills Match */}
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
-            <h4 className="font-semibold text-gray-900 mb-3">Skills Match</h4>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Required Skills:</span>
-                <span className="text-sm font-medium">
-                  {analysisResult.keywordAnalysis.requiredSkillsMatched}/{analysisResult.keywordAnalysis.totalRequiredSkills}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Preferred Skills:</span>
-                <span className="text-sm font-medium">
-                  {analysisResult.keywordAnalysis.preferredSkillsMatched}/{analysisResult.keywordAnalysis.totalPreferredSkills}
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                  style={{ 
-                    width: `${Math.min(100, (analysisResult.keywordAnalysis.requiredSkillsMatched / Math.max(analysisResult.keywordAnalysis.totalRequiredSkills, 1)) * 100)}%` 
-                  }}
-                ></div>
-              </div>
-            </div>
-          </div>
-
-          {/* Role Fit Analysis */}
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
-            <h4 className="font-semibold text-gray-900 mb-3">Role Fit Analysis</h4>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Resume Persona:</span>
-                <span className="text-sm font-medium capitalize text-blue-600">
-                  {analysisResult.keywordAnalysis.rolePersona}
-                </span>
-              </div>
-              {analysisResult.keywordAnalysis.softSkillsMatched.length > 0 && (
-                <div>
-                  <span className="text-sm text-gray-600">Soft Skills:</span>
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {analysisResult.keywordAnalysis.softSkillsMatched.slice(0, 3).map((skill, index) => (
-                      <span key={index} className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                        {skill}
-                      </span>
-                    ))}
-                    {analysisResult.keywordAnalysis.softSkillsMatched.length > 3 && (
-                      <span className="text-xs text-gray-500">
-                        +{analysisResult.keywordAnalysis.softSkillsMatched.length - 3} more
-                      </span>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Contextual Skills Analysis */}
-        {analysisResult.keywordAnalysis.contextualSkills.length > 0 && (
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
-            <h4 className="font-semibold text-gray-900 mb-3">Skills Context Analysis</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {['skills_section', 'experience_section', 'projects_section', 'summary_section'].map(section => {
-                const skillsInSection = analysisResult.keywordAnalysis.contextualSkills.filter(s => s.context === section);
-                if (skillsInSection.length === 0) return null;
-                
-                return (
-                  <div key={section} className="space-y-2">
-                    <h5 className="text-sm font-medium text-gray-700 capitalize">
-                      {section.replace('_', ' ')} ({skillsInSection.length})
-                    </h5>
-                    <div className="flex flex-wrap gap-1">
-                      {skillsInSection.slice(0, 4).map((skillInfo, index) => (
-                        <span 
-                          key={index} 
-                          className={`text-xs px-2 py-1 rounded ${
-                            skillInfo.weight >= 3 ? 'bg-purple-100 text-purple-800' :
-                            skillInfo.weight >= 2 ? 'bg-blue-100 text-blue-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}
-                          title={`Weight: ${skillInfo.weight}`}
-                        >
-                          {skillInfo.skill}
-                        </span>
-                      ))}
-                      {skillsInSection.length > 4 && (
-                        <span className="text-xs text-gray-500">
-                          +{skillsInSection.length - 4} more
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Detailed Feedback */}
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <h4 className="font-semibold text-gray-900 mb-3">Detailed Feedback & Suggestions</h4>
-          <div className="space-y-3">
-            {analysisResult.keywordAnalysis.feedback.map((feedback, index) => (
-              <div key={index} className="flex items-start space-x-3">
-                <div className={`w-2 h-2 rounded-full mt-2 ${
-                  feedback.includes('Critical') ? 'bg-red-500' :
-                  feedback.includes('Missing') ? 'bg-orange-500' :
-                  feedback.includes('bonus') ? 'bg-green-500' :
-                  'bg-blue-500'
-                }`}></div>
-                <div className="flex-1">
-                  <p className="text-sm text-gray-700">{feedback}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Suggestions */}
-        {analysisResult.keywordAnalysis.suggestions.length > 0 && (
-          <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-4 rounded-lg border border-amber-200">
-            <h4 className="font-semibold text-gray-900 mb-3">Improvement Suggestions</h4>
-            <ul className="space-y-2">
-              {analysisResult.keywordAnalysis.suggestions.map((suggestion, index) => (
-                <li key={index} className="flex items-start space-x-2">
-                  <span className="text-amber-600 mt-1">•</span>
-                  <span className="text-sm text-gray-700">{suggestion}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  // Download score report as text (simple version, can be improved to PDF)
   const handleDownloadReport = () => {
     if (!analysisResult) return;
     const content = `ATS Score Report\n\nScore: ${analysisResult.score.overall}%\n\nBreakdown:\nSkills Match: ${analysisResult.score.skillsMatch}%\nExperience Match: ${analysisResult.score.experienceMatch}%\nEducation Match: ${analysisResult.score.educationMatch}%\nKeyword Match: ${analysisResult.score.keywordMatch}%\n\nSuggestions:\n${analysisResult.suggestions.join('\n')}`;
@@ -411,7 +199,6 @@ const ATSScoreAnalysis = () => {
     URL.revokeObjectURL(url);
   };
 
-  // PDF export handler
   const handleDownloadPDF = () => {
     if (!analysisResult) return;
     const doc = new jsPDF();
@@ -459,10 +246,7 @@ const ATSScoreAnalysis = () => {
       });
       setEmailSent(true);
     } catch (err: any) {
-      console.error('Email sending error:', err);
-      // Display more specific error messages based on server response
       if (err.response) {
-        // Server responded with an error
         if (err.response.status === 503) {
           setEmailError('Email service is not configured. Please contact support.');
         } else if (err.response.data && err.response.data.message) {
@@ -471,10 +255,8 @@ const ATSScoreAnalysis = () => {
           setEmailError(`Server error (${err.response.status}): Please try again later.`);
         }
       } else if (err.request) {
-        // Request was made but no response received
         setEmailError('No response from server. Please check your connection and try again.');
       } else {
-        // Error in setting up the request
         setEmailError('Failed to send email. Please try again.');
       }
     } finally {
@@ -484,7 +266,6 @@ const ATSScoreAnalysis = () => {
 
   return (
     <div className="space-y-6">
-      {/* Onboarding/info banner */}
       {showInfoBanner && (
         <div className="w-full bg-indigo-50 border border-indigo-200 rounded-xl px-6 py-4 flex items-center gap-4 shadow-md relative animate-fade-in">
           <span className="text-indigo-700 text-lg font-semibold">ℹ️ ATS Resume Scoring</span>
@@ -500,7 +281,6 @@ const ATSScoreAnalysis = () => {
           </p>
         </div>
       </div>
-
       {step === 'upload' && (
         <div className="grid gap-6 md:grid-cols-2">
           <Card>
@@ -533,7 +313,6 @@ const ATSScoreAnalysis = () => {
                   </p>
                 </label>
               </div>
-              {/* Privacy disclaimer and consent */}
               <div className="mt-4 flex items-start gap-2">
                 <input
                   type="checkbox"
@@ -548,7 +327,6 @@ const ATSScoreAnalysis = () => {
               </div>
             </CardContent>
           </Card>
-
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -570,7 +348,6 @@ const ATSScoreAnalysis = () => {
           </Card>
         </div>
       )}
-
       {step === 'processing' && (
         <Card>
           <CardHeader>
@@ -593,7 +370,6 @@ const ATSScoreAnalysis = () => {
           </CardContent>
         </Card>
       )}
-
       {step === 'results' && analysisResult && (
         <Card>
           <CardHeader>
@@ -606,7 +382,6 @@ const ATSScoreAnalysis = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {/* ATS Score Meter */}
             <div className="flex flex-col md:flex-row items-center gap-8 mb-6">
               <div className="flex flex-col items-center">
                 <div className="relative w-32 h-32 flex items-center justify-center">
@@ -629,7 +404,6 @@ const ATSScoreAnalysis = () => {
                 </div>
                 <div className="mt-2 text-xs text-gray-500">{analysisResult.score.overall >= 80 ? 'Excellent' : analysisResult.score.overall >= 60 ? 'Average' : 'Needs Improvement'}</div>
               </div>
-              {/* Score Breakdown */}
               <div className="flex-1 grid grid-cols-2 gap-4">
                 <div className="flex flex-col items-center">
                   <span className="text-lg font-bold text-indigo-700">{analysisResult.score.skillsMatch}%</span>
@@ -649,7 +423,6 @@ const ATSScoreAnalysis = () => {
                 </div>
               </div>
             </div>
-            {/* Suggestions */}
             <div className="mt-6">
               <h4 className="font-semibold text-indigo-700 mb-2">Suggestions to Improve</h4>
               <ul className="list-disc ml-6 text-sm text-gray-700">
@@ -658,7 +431,6 @@ const ATSScoreAnalysis = () => {
                 ))}
               </ul>
             </div>
-            {/* Download/CTA Buttons */}
             <div className="flex flex-col md:flex-row gap-4 mt-8">
               <Button onClick={handleDownloadReport} variant="outline" className="flex items-center gap-2">
                 <Download className="w-4 h-4" /> Download Score Report
@@ -673,7 +445,6 @@ const ATSScoreAnalysis = () => {
                 <Mail className="w-4 h-4" /> Send to Email
               </Button>
             </div>
-            {/* Feedback Prompt */}
             <div className="mt-8">
               <h4 className="font-semibold text-indigo-700 mb-2">Was this score helpful?</h4>
               {!feedbackSubmitted ? (
@@ -700,7 +471,6 @@ const ATSScoreAnalysis = () => {
           </CardContent>
         </Card>
       )}
-
       {step === 'upload' && (
         <div className="flex justify-center">
           <Button 
@@ -712,8 +482,6 @@ const ATSScoreAnalysis = () => {
           </Button>
         </div>
       )}
-
-      {/* AI Resume Rewriting Modal */}
       <Dialog open={showRewriteModal} onOpenChange={setShowRewriteModal}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
@@ -743,8 +511,6 @@ const ATSScoreAnalysis = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Email Export Modal */}
       <Dialog open={showEmailModal} onOpenChange={setShowEmailModal}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -775,8 +541,6 @@ const ATSScoreAnalysis = () => {
           </form>
         </DialogContent>
       </Dialog>
-
-      {/* Floating Chatbot Widget */}
       <div className="fixed bottom-6 right-6 z-50">
         <button
           className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-lg p-4 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"

@@ -21,6 +21,7 @@ export interface ParsedResume {
 
 export interface JobDescription {
   text: string;
+  jobTitle?: string; // Added jobTitle as an optional property
   keywords: string[];
   requirements: string[];
   responsibilities: string[];
