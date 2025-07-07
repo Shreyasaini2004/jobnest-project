@@ -1,23 +1,51 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
-const jobSeekerSchema = new mongoose.Schema(
-  {
-    firstName: { type: String, required: true },
-    lastName: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-
-    // ✅ Profile form fields
-    phone: { type: String },
-    location: { type: String },
-    experience: { type: String },
-    education: { type: String },
-    skills: { type: String },
-    bio: { type: String },
-    avatar: { type: String },
+const jobSeekerSchema = new mongoose.Schema({
+  firstName: {
+    type: String,
+    required: true,
   },
-  { timestamps: true }
-);
+  lastName: {
+    type: String,
+    required: true,
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  password: {
+    type: String,
+    required: true,
+  },
+  avatar: {
+    type: String,
+    default: "",
+  },
+  bio: {
+    type: String,
+    default: "",
+  },
+  education: {
+    type: String,
+    default: "",
+  },
+  experience: {
+    type: String,
+    default: "",
+  },
+  skills: {
+    type: String,
+    default: "",
+  },
+  embedding: {
+    type: [Number],
+    default: [],
+  }
+}, {
+  timestamps: true
+});
 
-const JobSeeker = mongoose.model("JobSeeker", jobSeekerSchema);
+const JobSeeker = mongoose.model('JobSeeker', jobSeekerSchema);
+
 export default JobSeeker;

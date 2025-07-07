@@ -19,6 +19,7 @@ import applicationRoutes from "./routes/applications.js";
 import jobRoutes from "./routes/jobs.js";
 import userRoutes from "./routes/userRoutes.js";
 import embeddingRoutes from "./routes/embedding.js";
+import recommendationRoutes from "./routes/recommendations.js";
 
 const app = express();
 
@@ -31,6 +32,7 @@ app.use('/api/auth/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/embedding', embeddingRoutes);
+app.use('/api/recommendations', recommendationRoutes);
 
 // ✅ Serve uploads folder as static
 const uploadsPath = path.join(__dirname, 'uploads');
