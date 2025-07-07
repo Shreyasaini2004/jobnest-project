@@ -5,7 +5,7 @@ import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 const sidebarLinks = [
   { label: 'Dashboard Home', icon: Home, to: '/dashboard?section=dashboard-home' },
   { label: 'View Openings', icon: Briefcase, to: '/dashboard?section=view-openings' },
-  { label: 'Saved Jobs & Reminders', icon: Bookmark, to: '/dashboard?section=saved-jobs' },
+  { label: 'Saved Jobs', icon: Bookmark, to: '/dashboard?section=saved-jobs' },
   { label: 'Manage Applications', icon: FileText, to: '/dashboard?section=manage-applications' },
   { label: 'ATS Score Analysis', icon: Target, to: '/dashboard?section=ats-score' },
   { label: 'Saved Analyses', icon: Clock, to: '/dashboard?section=saved-analyses' },

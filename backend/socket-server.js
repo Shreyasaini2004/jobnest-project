@@ -22,13 +22,26 @@ const io = new Server(server, {
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
 
+  // Handle room joining - support both event names for compatibility
+  socket.on('join_room', (room) => {
+    socket.join(room);
+    console.log(`User ${socket.id} joined room ${room}`);
+  });
+
   socket.on('joinRoom', (room) => {
     socket.join(room);
     console.log(`User ${socket.id} joined room ${room}`);
   });
 
+  // Handle message sending - support both event names for compatibility
+  socket.on('send_message', (messageData) => {
+    io.to(messageData.room).emit('receive_message', messageData);
+    console.log(`Message sent to room ${messageData.room}:`, messageData);
+  });
+
   socket.on('sendMessage', ({ room, message }) => {
     io.to(room).emit('receiveMessage', message);
+    console.log(`Message sent to room ${room}:`, message);
   });
 
   socket.on('disconnect', () => {
