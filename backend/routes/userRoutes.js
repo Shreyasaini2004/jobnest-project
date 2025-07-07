@@ -3,14 +3,20 @@ import User from "../models/jobSeeker.js";
 
 const router = express.Router();
 
-// POST /api/auth/users/update-profile
+// ------------------------------
+// ✅ POST /api/auth/users/update-profile
+// ------------------------------
 router.post('/update-profile', async (req, res) => {
   try {
     const { userId, ...profileData } = req.body;
 
     console.log('Incoming update request:', req.body);
 
-    const updatedUser = await User.findByIdAndUpdate(userId, profileData, { new: true });
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      profileData,
+      { new: true }
+    );
 
     console.log('Updated user from DB:', updatedUser);
 

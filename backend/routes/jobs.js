@@ -25,6 +25,8 @@ router.get('/', async (req, res) => {
 // ✅ POST /api/jobs/create
 // ----------------------------
 router.post("/create", async (req, res) => {
+  console.log("📥 Incoming job:", req.body);
+
   try {
     const { jobTitle, description } = req.body;
 
@@ -34,8 +36,11 @@ router.post("/create", async (req, res) => {
 
     const textToEmbed = `${jobTitle} ${description}`.trim();
 
-    // ✅ Call *our* embedding generator
+    console.log("🧪 Text to embed:", textToEmbed);
+
     const embedding = await generateEmbedding(textToEmbed);
+
+    console.log("✨ Generated embedding:", embedding);
 
     const newJob = new Job({
       ...req.body,
@@ -44,12 +49,15 @@ router.post("/create", async (req, res) => {
 
     const savedJob = await newJob.save();
 
+    console.log("✅ Job saved:", savedJob);
+
     res.status(201).json(savedJob);
   } catch (err) {
     console.error("❌ Error creating job:", err);
     res.status(500).json({ error: "Failed to create job", details: err.message });
   }
 });
+
 
 // ----------------------------
 // ✅ GET /api/jobs/all
