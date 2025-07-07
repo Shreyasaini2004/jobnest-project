@@ -8,7 +8,7 @@ const mongoose = require('mongoose');
 // Apply for a job
 router.post('/apply', async (req, res) => {
   try {
-    const { jobId, jobSeekerId, coverLetter, resumeUrl } = req.body;
+    const { jobId, jobSeekerId, coverLetter, resumeUrl, experience, location, education, resumeScore } = req.body;
 
     // Validate IDs
     if (!mongoose.Types.ObjectId.isValid(jobId) || !mongoose.Types.ObjectId.isValid(jobSeekerId)) {
@@ -38,7 +38,11 @@ router.post('/apply', async (req, res) => {
       job: jobId,
       jobSeeker: jobSeekerId,
       coverLetter,
-      resumeUrl
+      resumeUrl,
+      resumeScore,
+      experience,
+      location,
+      education
     });
 
     const savedApplication = await application.save();
@@ -84,7 +88,7 @@ router.get('/job/:jobId', async (req, res) => {
     }
 
     const applications = await Application.find({ job: jobId })
-      .populate('jobSeeker', 'firstName lastName email avatar')
+      .populate('jobSeeker', 'firstName lastName email avatar phone experience location education skills')
       .sort({ createdAt: -1 });
 
     res.status(200).json(applications);

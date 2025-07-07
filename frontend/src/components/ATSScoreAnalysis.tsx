@@ -75,10 +75,18 @@ interface AnalysisResult {
   keywordAnalysis: KeywordAnalysis;
 }
 
-const ATSScoreAnalysis = () => {
+interface ATSScoreAnalysisProps {
+  onScoreUpdate?: (score: number) => void;
+  jobDescription?: string;
+}
+
+const ATSScoreAnalysis: React.FC<ATSScoreAnalysisProps> = ({ 
+  onScoreUpdate,
+  jobDescription = ''
+}) => {
   const [step, setStep] = useState<'upload' | 'processing' | 'results'>('upload');
   const [resumeFile, setResumeFile] = useState<File | null>(null);
-  const [jdText, setJdText] = useState('');
+  const [jdText, setJdText] = useState(jobDescription || '');
   const [showRecommendations, setShowRecommendations] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -212,6 +220,11 @@ const ATSScoreAnalysis = () => {
         title: "Analysis complete",
         description: `Your ATS score is ${result.score.overall}%`,
       });
+      
+      // Call the onScoreUpdate prop if provided
+      if (onScoreUpdate) {
+        onScoreUpdate(result.score.overall);
+      }
     } catch (error) {
       console.error('Analysis error:', error);
       toast({

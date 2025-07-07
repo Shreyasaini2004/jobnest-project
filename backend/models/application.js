@@ -23,6 +23,22 @@ const applicationSchema = new mongoose.Schema({
   resumeUrl: {
     type: String,
     default: ''
+  },
+  resumeScore: {
+    type: Number,
+    default: null
+  },
+  experience: {
+    type: String,
+    default: ''
+  },
+  location: {
+    type: String,
+    default: ''
+  },
+  education: {
+    type: String,
+    default: ''
   }
 }, {
   timestamps: true

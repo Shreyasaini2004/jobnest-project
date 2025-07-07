@@ -133,6 +133,29 @@ export const jobApi = {
     }
   },
   
+  // Get jobs by employer
+  getJobsByEmployer: async (employerId: string): Promise<Job[]> => {
+    try {
+      const response = await axios.get(`/api/jobs/employer/${employerId}`);
+      return response.data.map((job: any) => ({
+        id: job._id,
+        title: job.jobTitle,
+        company: job.postedBy?.companyName || 'Unknown Company',
+        location: job.location || 'Remote',
+        salary: job.salaryRange || 'Competitive',
+        type: job.jobType || 'Full-time',
+        posted: formatPostedDate(job.createdAt),
+        description: job.description || '',
+        skills: job.requirements ? job.requirements.split(',').map((skill: string) => skill.trim()) : [],
+        featured: false,
+        deadline: job.deadline ? new Date(job.deadline) : undefined
+      }));
+    } catch (error) {
+      console.error('Error fetching jobs by employer:', error);
+      return [];
+    }
+  },
+  
   // Note: Job seeker applications functionality moved to applicationApi.ts
 };
 

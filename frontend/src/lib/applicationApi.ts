@@ -20,7 +20,11 @@ export const applicationApi = {
         jobId,
         jobSeekerId: application.jobSeekerId,
         coverLetter: application.coverLetter,
-        resumeUrl: application.resumeUrl
+        resumeUrl: application.resumeUrl,
+        experience: application.experience || '',
+        location: application.location || '',
+        education: application.education || '',
+        resumeScore: application.resumeScore || null
       });
       
       return response.status === 201;

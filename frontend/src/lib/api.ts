@@ -219,6 +219,18 @@ export const jobApi = {
       // Simulate no applications
       return [];
     }
+  },
+  
+  // Get jobs by employer
+  getJobsByEmployer: async (employerId: string): Promise<Job[]> => {
+    try {
+      return await realJobApi.getJobsByEmployer(employerId);
+    } catch (error) {
+      console.error('Error using real API for jobs by employer:', error);
+      // Fallback to mock data (filter by companyName if possible)
+      await delay(500);
+      return mockJobs.filter(job => job.company === employerId); // fallback logic, adjust as needed
+    }
   }
 };
 
