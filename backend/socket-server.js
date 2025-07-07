@@ -9,7 +9,11 @@ app.use(cors()); // Allow CORS for all origins
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: '*', // Allow all origins for dev; restrict in production!
+    origin: [
+    'http://localhost:5173', // Vite/React dev server
+    'http://localhost:8080', // Alternate frontend port
+    'http://localhost:3000', // Another common frontend port
+  ], // Allow all origins for dev; restrict in production!
     methods: ['GET', 'POST']
   }
 });
@@ -33,7 +37,7 @@ io.on('connection', (socket) => {
 });
 
 // Start the server
-const PORT = 5000;
+const PORT = 5001;
 server.listen(PORT, () => {
   console.log(`Socket.IO server running on port ${PORT}`);
 }); 

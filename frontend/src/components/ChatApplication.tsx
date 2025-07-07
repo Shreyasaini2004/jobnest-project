@@ -4,7 +4,7 @@ import Chat from "./Chat";
 import { useSearchParams } from "react-router-dom";
 import "../App.css";
 
-const socket: Socket = io("http://localhost:5000");
+const socket: Socket = io("http://localhost:5001");
 
 function ChatApplication() {
   const [userName, setUsername] = useState<string>("");

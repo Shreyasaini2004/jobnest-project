@@ -12,7 +12,7 @@ const applicants = [
   { id: "3", name: "Jane Lee" }
 ];
 
-const socket = io("http://localhost:5000"); // Change to your backend URL
+const socket = io("http://localhost:5001"); // Change to your backend URL
 
 const EmployerMessages = () => {
   const [selectedApplicant, setSelectedApplicant] = useState(applicants[0]);
