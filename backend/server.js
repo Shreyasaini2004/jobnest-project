@@ -76,3 +76,8 @@ mongoose.connect(process.env.MONGO_URI)
     });
   })
   .catch((err) => console.error('❌ MongoDB connection error:', err));
+
+  import testEmailRoutes from './routes/testEmail.js';
+
+// Add this line with your other route middleware
+app.use('/api', testEmailRoutes);
