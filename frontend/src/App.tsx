@@ -16,6 +16,7 @@ import JobDetails from "./pages/JobDetails";
 import EmployerProfile from "./pages/EmployerProfile";
 import EmployerSettings from "./pages/EmployerSettings";
 import ChatWrapper from "./components/ChatWrapper";
+import ChatApplication from "./components/ChatApplication";
 
 import { UserProvider } from "./contexts/UserContext";
 import { EventProvider } from "./contexts/EventContext";
@@ -47,6 +48,7 @@ const App = () => (
                   <Route path="/search" element={<SearchResults />} />
                   <Route path="/jobs/:jobId" element={<JobDetails />} />
                   <Route path="/chat" element={<ChatWrapper />} />
+                  <Route path="/chatapp" element={<ChatApplication />} />
                   <Route path="/job-seeker-dashboard" element={<Navigate to="/dashboard" replace />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
