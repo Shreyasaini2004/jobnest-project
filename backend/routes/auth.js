@@ -7,6 +7,7 @@ import { fileURLToPath } from "url";
 import Employer from "../models/employer.js";
 import JobSeeker from "../models/jobSeeker.js";
 import cloudinary from "../config/cloudinary.js";
+import { sendWelcomeEmail } from "../services/emailService.js";
 
 const router = express.Router();
 
@@ -105,7 +106,7 @@ router.post("/employer/signup", async (req, res) => {
         createdAt: employer.createdAt
       }
     });
-
+    await sendWelcomeEmail(employer.email, `${employer.firstName} ${employer.lastName}`);
   } catch (err) {
     console.error("Signup error:", err);
     res.status(500).json({ error: "Signup failed" });
@@ -142,7 +143,6 @@ router.post("/employer/login", async (req, res) => {
         avatar: employer.avatar
       },
     });
-
   } catch (err) {
     console.error("Employer Login Error:", err);
     res.status(500).json({ error: "Login failed" });
@@ -155,23 +155,23 @@ router.post("/employer/login", async (req, res) => {
 // ---------------------------------------------------
 router.post("/jobseeker/signup", async (req, res) => {
   const { firstName, lastName, email, password, confirmPassword } = req.body;
-
+  
   if (!firstName || !lastName || !email || !password || !confirmPassword) {
     return res.status(400).json({ error: "All fields are required" });
   }
-
+  
   if (password !== confirmPassword) {
     return res.status(400).json({ error: "Passwords do not match" });
   }
-
+  
   try {
     const existingUser = await JobSeeker.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ error: "Email already registered" });
     }
-
+    
     const hashedPassword = await bcrypt.hash(password, 10);
-
+    
     const newJobSeeker = new JobSeeker({
       firstName,
       lastName,
@@ -180,7 +180,7 @@ router.post("/jobseeker/signup", async (req, res) => {
     });
 
     await newJobSeeker.save();
-
+    
     res.status(201).json({
       message: "Job Seeker registered successfully",
       user: {
@@ -191,7 +191,7 @@ router.post("/jobseeker/signup", async (req, res) => {
         createdAt: newJobSeeker.createdAt
       }
     });
-
+  await sendWelcomeEmail(newJobSeeker.email, `${newJobSeeker.firstName} ${newJobSeeker.lastName}`);
   } catch (err) {
     console.error("Signup Error:", err);
     res.status(500).json({ error: "Internal server error" });
@@ -204,7 +204,7 @@ router.post("/jobseeker/signup", async (req, res) => {
 // ---------------------------------------------------
 router.post("/jobseeker/login", async (req, res) => {
   const { email, password } = req.body;
-
+  
   try {
     const jobSeeker = await JobSeeker.findOne({ email });
     if (!jobSeeker) {
