@@ -7,9 +7,12 @@ import { FormField } from './FormField';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, FileText } from 'lucide-react';
 import { jobApi } from '@/lib/realApi';
 import { useUser } from '@/contexts/UserContext';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import ATSScoreAnalysis from './ATSScoreAnalysis';
+import { Badge } from './ui/badge';
 
 // Define the form schema using Zod
 const applicationSchema = z.object({
@@ -27,6 +30,10 @@ const applicationSchema = z.object({
     .url({ message: 'Please enter a valid URL' })
     .optional()
     .or(z.literal('')),
+  experience: z.string().min(1, { message: 'Experience is required' }),
+  location: z.string().min(1, { message: 'Location is required' }),
+  education: z.string().min(1, { message: 'Education is required' }),
+  resumeScore: z.number().optional().nullable(),
   agreeToTerms: z
     .boolean()
     .refine((val) => val === true, { message: 'You must agree to the terms' }),
@@ -56,6 +63,8 @@ const JobApplicationForm: React.FC<JobApplicationFormProps> = ({
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useUser();
+  const [showATSAnalysis, setShowATSAnalysis] = useState(false);
+  const [atsScore, setAtsScore] = useState<number | null>(null);
   
   // Function for applying to jobs using real API
   const applyToJob = async (data: { jobId: string; application: any }) => {
@@ -106,6 +115,10 @@ const JobApplicationForm: React.FC<JobApplicationFormProps> = ({
       coverLetter: '',
       resumeUrl: '',
       portfolioUrl: '',
+      experience: '',
+      location: '',
+      education: '',
+      resumeScore: null,
       agreeToTerms: false,
     },
   });
@@ -121,9 +134,24 @@ const JobApplicationForm: React.FC<JobApplicationFormProps> = ({
         coverLetter: data.coverLetter,
         resumeUrl: data.resumeUrl || undefined,
         portfolioUrl: data.portfolioUrl || undefined,
+        experience: data.experience,
+        location: data.location,
+        education: data.education,
+        resumeScore: data.resumeScore,
       },
     });
   });
+
+  // Handle ATS score from analysis component
+  const handleATSScoreUpdate = (score: number) => {
+    setAtsScore(score);
+    form.setValue('resumeScore', score);
+    setShowATSAnalysis(false);
+    toast({
+      title: "ATS Score Added",
+      description: `Your resume scored ${score}%. This score has been added to your application.`,
+    });
+  };
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
@@ -161,6 +189,54 @@ const JobApplicationForm: React.FC<JobApplicationFormProps> = ({
             />
             
             <FormField
+              name="experience"
+              label="Experience"
+              type="text"
+              placeholder="e.g. 3 years in frontend development"
+              required
+            />
+            
+            <FormField
+              name="location"
+              label="Location"
+              type="text"
+              placeholder="e.g. San Francisco, CA"
+              required
+            />
+            
+            <FormField
+              name="education"
+              label="Education"
+              type="text"
+              placeholder="e.g. B.Sc. in Computer Science, Stanford University"
+              required
+            />
+            
+            {/* ATS Score Display */}
+            <div className="flex items-center justify-between border p-3 rounded-md">
+              <div>
+                <h3 className="font-medium">ATS Resume Score</h3>
+                <p className="text-sm text-gray-500">Analyze how well your resume matches this job</p>
+              </div>
+              <div className="flex items-center gap-2">
+                {atsScore !== null && (
+                  <Badge className={`${atsScore >= 80 ? 'bg-green-500' : atsScore >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`}>
+                    {atsScore}%
+                  </Badge>
+                )}
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setShowATSAnalysis(true)}
+                  className="flex items-center gap-2"
+                >
+                  <FileText className="h-4 w-4" />
+                  {atsScore === null ? 'Analyze Resume' : 'Re-analyze'}
+                </Button>
+              </div>
+            </div>
+
+            <FormField
               name="agreeToTerms"
               type="checkbox"
               checkboxLabel="I agree to the terms and conditions"
@@ -185,6 +261,19 @@ const JobApplicationForm: React.FC<JobApplicationFormProps> = ({
           </CardFooter>
         </form>
       </FormProvider>
+
+      {/* ATS Analysis Dialog */}
+      <Dialog open={showATSAnalysis} onOpenChange={setShowATSAnalysis}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Resume ATS Analysis for {jobTitle}</DialogTitle>
+          </DialogHeader>
+          <ATSScoreAnalysis 
+            onScoreUpdate={handleATSScoreUpdate}
+            jobDescription={`Job Title: ${jobTitle}\nCompany: ${companyName}\n\nJob Description: This is a position for ${jobTitle} at ${companyName}. Please analyze the resume against this job.`}
+          />
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

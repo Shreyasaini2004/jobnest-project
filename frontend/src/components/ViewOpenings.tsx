@@ -48,7 +48,7 @@ const ViewOpenings = () => {
     return {
       id: backendJob._id,
       title: backendJob.jobTitle,
-      company: backendJob.postedBy.companyName,
+      company: backendJob.postedBy?.companyName || 'Unknown Company',
       location: backendJob.location || "Location not specified",
       salary: backendJob.salaryRange || "Salary not specified",
       type: backendJob.jobType,
