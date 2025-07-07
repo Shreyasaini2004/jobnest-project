@@ -65,6 +65,12 @@ const JobApplicationForm: React.FC<JobApplicationFormProps> = ({
   const applyToJob = async (data: { jobId: string; postedBy: string; application: ApplicationFormValues }) => {
     setIsLoading(true);
     try {
+      console.log("📨 Final submit payload:", {
+        jobId,
+        postedBy,
+        ...data.application,
+      });
+      
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/applications`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

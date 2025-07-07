@@ -1,9 +1,16 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, DollarSign, Clock, Bookmark, BookmarkCheck } from "lucide-react";
+import {
+  MapPin,
+  DollarSign,
+  Clock,
+  Bookmark,
+  BookmarkCheck,
+} from "lucide-react";
 import { useSavedJobs } from "@/contexts/SavedJobsContext";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface JobCardProps {
   id: string;
@@ -16,22 +23,25 @@ interface JobCardProps {
   description: string;
   skills: string[];
   featured?: boolean;
+  postedById?: string; // ✅ Important fix
 }
 
-const JobCard = ({ 
+const JobCard = ({
   id,
-  title, 
-  company, 
-  location, 
-  salary, 
-  type, 
-  posted, 
-  description, 
-  skills, 
-  featured = false 
+  title,
+  company,
+  location,
+  salary,
+  type,
+  posted,
+  description,
+  skills,
+  featured = false,
+  postedById,
 }: JobCardProps) => {
   const { saveJob, removeJob, isJobSaved } = useSavedJobs();
   const [saved, setSaved] = useState(isJobSaved(id));
+  const navigate = useNavigate();
 
   const handleBookmark = () => {
     if (saved) {
@@ -48,13 +58,30 @@ const JobCard = ({
         posted,
         description,
         skills,
-        featured
+        featured,
       });
       setSaved(true);
     }
   };
+
+  const handleApply = () => {
+    navigate(`/apply/${id}`, {
+      state: {
+        jobTitle: title,
+        companyName: company,
+        postedBy: postedById,
+      },
+    });
+  };
+
   return (
-    <Card className={`group hover:shadow-lg transition-all duration-300 cursor-pointer ${featured ? 'border-job-primary bg-gradient-to-r from-job-secondary/30 to-background' : ''}`}>
+    <Card
+      className={`group hover:shadow-lg transition-all duration-300 cursor-pointer ${
+        featured
+          ? "border-job-primary bg-gradient-to-r from-job-secondary/30 to-background"
+          : ""
+      }`}
+    >
       <CardContent className="p-6">
         <div className="flex justify-between items-start mb-4">
           <div className="flex-1">
@@ -63,18 +90,24 @@ const JobCard = ({
                 {title}
               </h3>
               {featured && (
-                <Badge className="bg-job-accent text-white text-xs">Featured</Badge>
+                <Badge className="bg-job-accent text-white text-xs">
+                  Featured
+                </Badge>
               )}
             </div>
             <p className="text-muted-foreground font-medium">{company}</p>
           </div>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className={`shrink-0 ${saved ? 'text-job-primary' : ''}`}
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`shrink-0 ${saved ? "text-job-primary" : ""}`}
             onClick={handleBookmark}
           >
-            {saved ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
+            {saved ? (
+              <BookmarkCheck className="h-4 w-4" />
+            ) : (
+              <Bookmark className="h-4 w-4" />
+            )}
           </Button>
         </div>
 
@@ -114,7 +147,10 @@ const JobCard = ({
           <Badge variant="outline" className="text-xs">
             {type}
           </Badge>
-          <Button className="bg-job-primary hover:bg-job-primary/90 text-white">
+          <Button
+            className="bg-job-primary hover:bg-job-primary/90 text-white"
+            onClick={handleApply}
+          >
             Apply Now
           </Button>
         </div>

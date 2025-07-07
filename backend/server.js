@@ -1,3 +1,4 @@
+// server.js
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
@@ -20,6 +21,7 @@ import jobRoutes from "./routes/jobs.js";
 import userRoutes from "./routes/userRoutes.js";
 import embeddingRoutes from "./routes/embedding.js";
 import recommendationRoutes from "./routes/recommendations.js";
+import jobSeekerRoutes from "./routes/jobSeekerRoutes.js"; // ✅ import route
 
 const app = express();
 
@@ -33,6 +35,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/embedding', embeddingRoutes);
 app.use('/api/recommendations', recommendationRoutes);
+app.use('/api', jobSeekerRoutes); // ✅ this line was missing earlier
 
 // ✅ Serve uploads folder as static
 const uploadsPath = path.join(__dirname, 'uploads');

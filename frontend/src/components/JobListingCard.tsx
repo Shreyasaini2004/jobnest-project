@@ -7,19 +7,32 @@ import { Job } from "@/contexts/SavedJobsContext";
 import { useNavigate } from "react-router-dom";
 
 interface JobListingCardProps {
-  job: Job;
+  job: Job & { postedById?: string }; // ✅ include postedById
   isExpanded: boolean;
   onToggleDetails: () => void;
-  onApply: () => void;
 }
 
 const JobListingCard = ({
   job,
   isExpanded,
   onToggleDetails,
-  onApply,
 }: JobListingCardProps) => {
   const navigate = useNavigate();
+
+  const handleApply = () => {
+    if (!job.postedById) {
+      console.error("⚠️ Missing postedById in job:", job);
+      return;
+    }
+
+    navigate(`/apply/${job.id}`, {
+      state: {
+        jobTitle: job.title,
+        companyName: job.company,
+        postedBy: job.postedById, // ✅ crucial fix
+      },
+    });
+  };
 
   return (
     <Card className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-border/50 bg-gradient-to-br from-card to-card/50">
@@ -79,7 +92,7 @@ const JobListingCard = ({
         <div className="flex gap-2 pt-2">
           <Button
             className="flex-1 bg-job-primary hover:bg-job-primary/90 text-white"
-            onClick={onApply}
+            onClick={handleApply} // ✅ this is where fix happens
           >
             Apply Now
           </Button>

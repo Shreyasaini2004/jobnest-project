@@ -13,7 +13,10 @@ router.get('/', async (req, res) => {
   if (!recruiterId) return res.status(400).json({ error: "Missing recruiterId" });
 
   try {
-    const jobs = await Job.find({ postedBy: recruiterId }).select("jobTitle");
+    const jobs = await Job.find({ postedBy: recruiterId })
+      .populate('postedBy', 'companyName') // ✅ Add this
+      .select('jobTitle postedBy'); // ✅ Select postedBy too
+
     res.status(200).json(jobs);
   } catch (err) {
     console.error("❌ Error fetching jobs by recruiter:", err.message);
