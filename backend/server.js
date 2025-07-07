@@ -46,7 +46,7 @@ app.get('/api/check-uploads', (req, res) => {
     console.error('Error accessing uploads directory:', err);
     res.status(500).json({ success: false, error: err.message });
   }
-});
+}); 
 
 app.use('/api/auth', authRoutes);
 app.use("/api/jobs", jobRoutes);

@@ -107,3 +107,98 @@ export function logout() {
     localStorage.removeItem('user');
   }
 }
+
+
+// src/contexts/UserContext.tsx (UPDATED)
+// import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+
+// // Define the shape of your user object. Add any other fields you need.
+// interface User {
+//   _id: string;
+//   email: string;
+//   role: 'employer' | 'jobseeker';
+//   companyName?: string;
+//   firstName?: string;
+// }
+
+// // Define the context type
+// interface UserContextType {
+//   user: User | null;
+//   token: string | null;
+//   setUser: (user: User | null) => void; // Kept for compatibility if needed elsewhere
+//   login: (userData: User, token: string) => void;
+//   logout: () => void;
+//   isLoading: boolean;
+// }
+
+// // Create the context
+// const UserContext = createContext<UserContextType | undefined>(undefined);
+
+// // Create the provider component
+// export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+//   const [user, setUserState] = useState<User | null>(null);
+//   const [token, setToken] = useState<string | null>(null);
+//   const [isLoading, setIsLoading] = useState(true);
+
+//   // On initial app load, check localStorage for existing session
+//   useEffect(() => {
+//     try {
+//       const storedToken = localStorage.getItem('token');
+//       const storedUser = localStorage.getItem('user');
+
+//       if (storedToken && storedUser) {
+//         setToken(storedToken);
+//         setUserState(JSON.parse(storedUser));
+//       }
+//     } catch (error) {
+//       console.error("Failed to initialize user state from localStorage", error);
+//     } finally {
+//       setIsLoading(false); // We are done loading
+//     }
+//   }, []);
+
+//   // Login function
+//   const login = (userData: User, authToken: string) => {
+//     setUserState(userData);
+//     setToken(authToken);
+//     localStorage.setItem('user', JSON.stringify(userData));
+//     localStorage.setItem('token', authToken);
+//   };
+
+//   // Logout function
+//   const logout = () => {
+//     setUserState(null);
+//     setToken(null);
+//     localStorage.removeItem('user');
+//     localStorage.removeItem('token');
+//     // For a clean logout, redirect to the login page
+//     window.location.href = '/login'; 
+//   };
+  
+//   // Backward compatibility for existing setUser calls
+//   const setUser = (user: User | null) => {
+//     setUserState(user);
+//     if(user) {
+//         localStorage.setItem('user', JSON.stringify(user));
+//     } else {
+//         localStorage.removeItem('user');
+//     }
+//   }
+
+//   const contextValue = { user, token, setUser, login, logout, isLoading };
+
+//   return (
+//     <UserContext.Provider value={contextValue}>
+//       {!isLoading && children}
+//     </UserContext.Provider>
+//   );
+// };
+
+// // Custom hook for easy access
+// export const useUser = () => {
+//   const context = useContext(UserContext);
+//   if (!context) {
+//     throw new Error('useUser must be used within a UserProvider');
+//   }
+//   return context;
+// };

@@ -269,3 +269,106 @@ const ViewApplications = () => {
 
 export default ViewApplications;
 
+// src/components/ViewApplication.tsx
+
+// src/components/ViewApplication.tsx (UPDATED)
+// import React, { useEffect, useState } from 'react';
+// import { useNavigate,Link } from 'react-router-dom';
+// import { useUser } from '@/contexts/UserContext'; // ✅ Import your existing hook
+// import { MessageSquare } from 'lucide-react';
+
+// // Define the shape of the data you expect from the API
+// interface Application {
+//   _id: string;
+//   status: string;
+//   applicant: {
+//     _id: string;
+//     firstName: string;
+//     lastName: string;
+//     email: string;
+//   };
+//   job: {
+//     _id: string;
+//     jobTitle: string;
+//   };
+// }
+
+// const ViewApplication: React.FC = () => {
+//   const [applications, setApplications] = useState<Application[]>([]);
+//   const [isLoading, setIsLoading] = useState(true);
+//   const navigate = useNavigate();
+//   const { user: employer, token } = useUser(); // ✅ Get user and token from context
+
+//   useEffect(() => {
+//     // Only fetch data if we have a logged-in user and a token
+//     if (!employer || !token) {
+//       setIsLoading(false);
+//       return;
+//     }
+
+//     const fetchApplications = async () => {
+//       try {
+//         const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+//         // The backend route should get the employer ID from the token
+//         const res = await fetch(`${apiUrl}/api/applications/employer`, {
+//           headers: {
+//             'Authorization': `Bearer ${token}` // ✅ Send the auth token
+//           }
+//         });
+
+//         if (!res.ok) {
+//           throw new Error("Failed to fetch applications. Are you logged in?");
+//         }
+        
+//         const data = await res.json();
+//         setApplications(data);
+//       } catch (error) {
+//         console.error('Fetch error:', error);
+//       } finally {
+//         setIsLoading(false);
+//       }
+//     };
+
+//     fetchApplications();
+//   }, [employer, token]); // Re-fetch if the user or token changes
+
+//   if (isLoading) {
+//     return <div>Loading applications...</div>;
+//   }
+
+//   if (!employer) {
+//     return <div>Please log in to view your applications. <Link to="/login" className="underline">Login</Link></div>;
+//   }
+
+//   return (
+//     <div className="p-6 max-w-4xl mx-auto">
+//       <h2 className="text-2xl font-bold mb-4">Applications for {employer.companyName}</h2>
+      
+//       {applications.length === 0 && <p>No applications received yet.</p>}
+
+//       {applications.map(app => (
+//         <div key={app._id} className="border p-4 rounded-lg shadow mb-6 bg-white">
+//           <h3 className="text-xl font-semibold">{app.applicant.firstName} {app.applicant.lastName}</h3>
+//           <p className="text-sm text-gray-700">Email: {app.applicant.email}</p>
+//           <p className="text-sm text-gray-700">Applied for: {app.job?.jobTitle || 'N/A'}</p>
+//           <div className="mt-4 flex justify-between items-center">
+//             <a href={"#"} className="text-blue-600 underline">View Resume</a>
+//             <button
+//               onClick={() => {
+//                 const roomId = app._id; // The unique application ID
+//                 const employerUsername = employer.companyName || "Employer";
+//                 navigate(`/chat?room=${roomId}&user=${encodeURIComponent(employerUsername)}`);
+//               }}
+//               className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+//             >
+//               <MessageSquare className="h-4 w-4 mr-2" />
+//               Message
+//             </button>
+//           </div>
+//         </div>
+//       ))}
+//     </div>
+//   );
+// };
+
+// export default ViewApplication;
