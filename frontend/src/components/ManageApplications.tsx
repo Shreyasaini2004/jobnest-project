@@ -233,12 +233,14 @@ const ManageApplications = () => {
                       // }
 
                       onClick={() => {
-    // Use the SAME Application ID for the room
+    // Use the Application ID for the room
     const roomId = application.id; 
     // Get the job seeker's name from your auth context
-    const jobSeekerUsername = user.firstName || "Applicant"; 
+    const jobSeekerUsername = user.firstName || "Applicant";
+    // Get the employer's company name for the chat partner
+    const chatPartnerName = application.company || "Employer";
 
-    navigate(`/chat?room=${roomId}&user=${encodeURIComponent(jobSeekerUsername)}`);
+    navigate(`/chat?room=${roomId}&user=${encodeURIComponent(jobSeekerUsername)}&partnerName=${encodeURIComponent(chatPartnerName)}`);
   }}
   // In the "Message" button's onClick handler
 

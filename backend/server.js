@@ -140,15 +140,31 @@ app.use(express.static(__dirname));
 // ===================================
 //  5. DEFINE SOCKET.IO EVENT LISTENERS
 // ===================================
+
+// In-memory storage for message history
+const messageHistory = {};
+
 io.on('connection', (socket) => {
   console.log(`✅ Socket.IO: User Connected - ${socket.id}`);
 
   socket.on('join_room', (room) => {
     socket.join(room);
     console.log(`Socket.IO: User ${socket.id} joined room: ${room}`);
+    
+    // Send message history to the user when they join a room
+    if (messageHistory[room]) {
+      socket.emit('message_history', messageHistory[room]);
+      console.log(`Socket.IO: Sent message history to user ${socket.id} for room ${room}`);
+    }
   });
 
   socket.on('send_message', (data) => {
+    // Store message in history
+    if (!messageHistory[data.room]) {
+      messageHistory[data.room] = [];
+    }
+    messageHistory[data.room].push(data);
+    
     // This broadcasts the message to everyone else in the same room
     socket.to(data.room).emit('receive_message', data);
     console.log(`Socket.IO: Message sent to room ${data.room}`);

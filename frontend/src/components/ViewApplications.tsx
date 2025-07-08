@@ -300,9 +300,11 @@ const ViewApplications = () => {
     // The Application ID is the perfect unique room ID
     const roomId = application._id || application.id; 
     // Get the employer's name from your auth context
-    const employerUsername = user.companyName || "Employer"; 
+    const employerUsername = user.companyName || "Employer";
+    // Get the applicant's name for the chat partner
+    const applicantName = application.jobSeeker?.firstName || application.candidateName || "Applicant";
 
-    navigate(`/chat?room=${roomId}&user=${encodeURIComponent(employerUsername)}`);
+    navigate(`/chat?room=${roomId}&user=${encodeURIComponent(employerUsername)}&partnerName=${encodeURIComponent(applicantName)}`);
   }}
 //   onClick={() => {
 //   const roomId = application._id;

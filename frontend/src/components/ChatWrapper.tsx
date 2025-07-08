@@ -30,7 +30,6 @@
 
 
 
-// src/components/ChatWrapper.tsx (CORRECTED)
 // src/components/ChatWrapper.tsx
 import { useSearchParams } from "react-router-dom";
 import React, { useEffect } from "react";
@@ -41,6 +40,7 @@ const ChatWrapper = () => {
   const [searchParams] = useSearchParams();
   const room = searchParams.get("room");
   const username = searchParams.get("user");
+  const partnerName = searchParams.get("partnerName");
 
   useEffect(() => {
     // Connect our shared socket when we enter the page
@@ -65,7 +65,7 @@ const ChatWrapper = () => {
     );
   }
 
-  return <Chat socket={socket} username={username} room={room} />;
+  return <Chat socket={socket} username={username} room={room} chatPartnerName={partnerName || "Chat Partner"} />;
 };
 
 export default ChatWrapper;
