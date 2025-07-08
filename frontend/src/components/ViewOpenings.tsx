@@ -1,14 +1,16 @@
-import { useEffect, useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
-import { useUser } from "@/contexts/UserContext";
+import { useState, useMemo, useEffect } from "react";
+import { Filter, Loader2 } from "lucide-react";
+import { Job } from "@/contexts/SavedJobsContext";
 import JobSearchFilters from "./JobSearchFilters";
+import { useNavigate } from "react-router-dom";
 import JobListingCard from "./JobListingCard";
 import NoJobsFound from "./NoJobsFound";
 import ErrorBoundary from "./ErrorBoundary";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { Button } from "./ui/button";
+import { AlertCircle } from "lucide-react";
 
-interface Job {
+interface BackendJob {
   _id: string;
   jobTitle: string;
   jobType: string;
@@ -33,77 +35,63 @@ interface Job {
 
 const ViewOpenings = () => {
   const navigate = useNavigate();
-  const { user } = useUser();
-  const [jobs, setJobs] = useState<Job[]>([]);
+  const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api` || 'http://localhost:5000/api';
+
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [filterLocation, setFilterLocation] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [jobs, setJobs] = useState<BackendJob[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const [expandedJobId, setExpandedJobId] = useState<string | null>(null);
-  const [showUpdatePrompt, setShowUpdatePrompt] = useState(false);
 
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const fetchJobs = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await fetch(`${API_BASE_URL}/jobs/all`);
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const backendJobs: BackendJob[] = await response.json();
+      setJobs(backendJobs);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch jobs');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleJobApplication = (
+    jobId: string,
+    jobTitle: string,
+    companyName: string,
+    recruiterId: string
+  ) => {
+    navigate(`/apply/${jobId}`, {
+      state: {
+        jobTitle,
+        companyName,
+        postedBy: recruiterId,
+      },
+    });
+  };
 
   useEffect(() => {
-    const fetchUserAndJobs = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-
-        // 1. Fetch full user info from DB
-        const profileRes = await fetch(`${API_BASE_URL}/api/jobseeker/${user?._id}`);
-        if (!profileRes.ok) throw new Error("Failed to fetch user profile");
-        const profile = await profileRes.json();
-
-        // 2. Check if user profile is incomplete
-        const isIncomplete =
-          !profile.skills || !profile.education || !profile.experience;
-
-        if (isIncomplete) {
-          setShowUpdatePrompt(true);
-
-          // 3. Show all jobs
-          const jobsRes = await fetch(`${API_BASE_URL}/api/jobs/all`);
-          if (!jobsRes.ok) throw new Error("Failed to fetch all jobs");
-          const allJobs = await jobsRes.json();
-          setJobs(allJobs);
-        } else {
-          // 4. Profile is complete — show recommended jobs
-          setShowUpdatePrompt(false);
-          const recJobsRes = await fetch(
-            `${API_BASE_URL}/api/recommendations/jobs-for-user/${user?._id}`
-          );
-          if (!recJobsRes.ok) throw new Error("Failed to fetch recommended jobs");
-          const recJobs = await recJobsRes.json();
-          setJobs(recJobs);
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Error occurred");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (user?._id) fetchUserAndJobs();
-  }, [user]);
+    fetchJobs();
+  }, []);
 
   const filteredJobs = useMemo(() => {
-    return jobs.filter((job) => {
-      const matchesSearch = searchTerm
-        ? job.jobTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          job.postedBy?.companyName?.toLowerCase().includes(searchTerm.toLowerCase())
-        : true;
+    return jobs.filter(job => {
+      const matchesSearch = searchTerm ? (
+        job.jobTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (job.postedBy?.companyName?.toLowerCase().includes(searchTerm.toLowerCase()) || '') // Safe check
+      ) : true;
 
-      const matchesType =
-        filterType !== "all"
-          ? job.jobType.toLowerCase() === filterType.toLowerCase()
-          : true;
+      const matchesType = filterType !== 'all' ?
+        job.jobType.toLowerCase() === filterType.toLowerCase() : true;
 
-      const matchesLocation =
-        filterLocation !== "all"
-          ? (job.location || "").toLowerCase().includes(filterLocation.toLowerCase())
-          : true;
+      const matchesLocation = filterLocation !== 'all' ?
+        (job.location || '').toLowerCase().includes(filterLocation.toLowerCase()) : true;
 
       return matchesSearch && matchesType && matchesLocation;
     });
@@ -112,16 +100,6 @@ const ViewOpenings = () => {
   return (
     <ErrorBoundary>
       <div className="space-y-8">
-        {showUpdatePrompt && (
-          <Alert variant="default" className="border-blue-500 bg-blue-50">
-            <AlertCircle className="h-4 w-4 text-blue-600" />
-            <AlertTitle>Complete your profile</AlertTitle>
-            <AlertDescription>
-              To get personalized job recommendations, please update your profile.
-            </AlertDescription>
-          </Alert>
-        )}
-
         <JobSearchFilters
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
@@ -142,8 +120,6 @@ const ViewOpenings = () => {
             <AlertTitle>Error</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
-        ) : filteredJobs.length === 0 ? (
-          <NoJobsFound />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {filteredJobs.map((job) => (
@@ -152,39 +128,26 @@ const ViewOpenings = () => {
                 job={{
                   id: job._id,
                   title: job.jobTitle,
-                  company: job.postedBy?.companyName || "Unknown",
-                  location: job.location || "Not specified",
-                  salary: job.salaryRange || "Not specified",
+                  company: job.postedBy?.companyName || 'Unknown Company',
+                  location: job.location || 'Not specified',
+                  salary: job.salaryRange || 'Not specified',
                   type: job.jobType,
                   posted: new Date(job.createdAt).toDateString(),
-                  description: job.description || "",
+                  description: job.description || '',
                   skills: [],
                   featured: false,
-                  postedById: job.postedBy?._id,
+                  postedById: job.postedBy?._id || '',
                 }}
                 isExpanded={expandedJobId === job._id}
-                onToggleDetails={() =>
-                  setExpandedJobId((prev) => (prev === job._id ? null : job._id))
+                onToggleDetails={() => setExpandedJobId(prev => prev === job._id ? null : job._id)}
+                onApply={() =>
+                  handleJobApplication(
+                    job._id,
+                    job.jobTitle,
+                    job.postedBy?.companyName || 'Unknown Company',
+                    job.postedBy?._id || ''
+                  )
                 }
-                onApply={() => {
-                  console.log("Navigating with:", {
-                    jobId: job._id,
-                    postedBy:
-                      typeof job.postedBy === "string"
-                        ? job.postedBy
-                        : job.postedBy?._id || "❌ Missing",
-                  });
-                  navigate(`/apply/${job._id}`, {
-                    state: {
-                      jobTitle: job.jobTitle,
-                      companyName: job.postedBy?.companyName || "Unknown",
-                      postedBy:
-                        typeof job.postedBy === "string"
-                          ? job.postedBy
-                          : job.postedBy?._id || "",
-                    },
-                  });
-                }}
               />
             ))}
           </div>
