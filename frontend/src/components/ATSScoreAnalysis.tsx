@@ -1069,17 +1069,6 @@ doc.setFillColor(...barColor);
           </CardContent>
         </Card>
       )}
-      {step === 'upload' && (
-        <div className="flex justify-center">
-          <Button 
-            onClick={handleAnalyze}
-            disabled={!resumeFile || !jdText.trim()}
-            className="px-8 py-3"
-          >
-            Analyze Resume
-          </Button>
-        </div>
-      )}
       <Dialog open={showRewriteModal} onOpenChange={setShowRewriteModal}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
@@ -1341,16 +1330,6 @@ doc.setFillColor(...barColor);
         </DialogContent>
       </Dialog>
       
-      <div className="fixed bottom-6 right-6 z-50">
-        <button
-          className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-lg p-4 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-          onClick={() => window.open('https://chat.openai.com/', '_blank')}
-          title="Ask the AI Assistant for resume/job search help"
-        >
-          <span className="text-lg">💬</span>
-          <span className="hidden md:inline">Chatbot</span>
-        </button>
-      </div>
     </div>
   );
 };

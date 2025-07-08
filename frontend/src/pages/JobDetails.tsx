@@ -472,7 +472,7 @@ const JobDetails = () => {
                   exit={{ opacity: 0 }}
                 >
                   <motion.div 
-                    className="w-full max-w-2xl"
+                    className="w-full max-w-2xl overflow-y-auto max-h-[90vh]"
                     initial={{ scale: 0.9, y: 20 }}
                     animate={{ scale: 1, y: 0 }}
                     exit={{ scale: 0.9, y: 20 }}

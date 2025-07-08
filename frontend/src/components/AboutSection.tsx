@@ -86,9 +86,7 @@ const AboutSection = () => {
           </div>
         </div>
 
-        <div style={{ marginTop: '1rem', color: 'green' }}>
-          Backend says: {apiMessage}
-        </div>
+
       </div>
     </section>
   );
