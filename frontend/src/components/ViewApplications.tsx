@@ -295,7 +295,23 @@ const ViewApplications = () => {
                     variant="outline"
                     size="sm"
                     className="border-blue-200 hover:bg-blue-50"
-                    onClick={() => navigate(`/chat?receiverId=${application._id || application.id}`)}
+                    // onClick={() => navigate(`/chat?receiverId=${application._id || application.id}`)}
+                    onClick={() => {
+    // The Application ID is the perfect unique room ID
+    const roomId = application._id || application.id; 
+    // Get the employer's name from your auth context
+    const employerUsername = user.companyName || "Employer"; 
+
+    navigate(`/chat?room=${roomId}&user=${encodeURIComponent(employerUsername)}`);
+  }}
+//   onClick={() => {
+//   const roomId = application._id;
+//   // We need to pass the applicant's name to the chat page
+//   // const chatPartnerName = `${application.applicant.firstName} ${application.applicant.lastName}`;
+//   const chatPartnerName = `${application.applicant?.firstName || 'The'} ${application.applicant?.lastName || 'Applicant'}`;
+  
+//   navigate(`/chat?room=${roomId}&partnerName=${encodeURIComponent(chatPartnerName)}`);
+// }}
                   >
                     <MessageSquare className="h-4 w-4 mr-1" />
                     Message
@@ -399,16 +415,22 @@ const ViewApplications = () => {
 
 export default ViewApplications;
 
-// src/components/ViewApplication.tsx
 
-// src/components/ViewApplication.tsx (UPDATED)
-// import React, { useEffect, useState } from 'react';
-// import { useNavigate,Link } from 'react-router-dom';
-// import { useUser } from '@/contexts/UserContext'; // ✅ Import your existing hook
-// import { MessageSquare } from 'lucide-react';
 
-// // Define the shape of the data you expect from the API
-// interface Application {
+// src/pages/ViewApplications.tsx (or components) - COMPLETELY UPDATED
+
+// import React, { useState, useEffect } from "react";
+// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+// import { Button } from "@/components/ui/button";
+// import { Badge } from "@/components/ui/badge";
+// import { MessageSquare, Eye } from "lucide-react"; // Add other icons as needed
+// import { useUser } from "@/contexts/UserContext"; // Assuming this is your auth context
+// import apiClient from "@/lib/axios"; // Assuming you have a configured axios instance
+// import { ChatDialog } from "@/components/ChatDialog"; // Import the new dialog
+// import { socket } from "@/lib/socket"; // Import the shared socket instance
+
+// // Define a clear interface for the application data from your API
+// interface ApplicationData {
 //   _id: string;
 //   status: string;
 //   applicant: {
@@ -421,84 +443,107 @@ export default ViewApplications;
 //     _id: string;
 //     jobTitle: string;
 //   };
+//   // Add any other fields you expect, like resumeUrl
 // }
 
-// const ViewApplication: React.FC = () => {
-//   const [applications, setApplications] = useState<Application[]>([]);
+// // Define the shape of the data needed to open the chat
+// interface ChatState {
+//   room: string;
+//   chatPartnerName: string;
+// }
+
+// const ViewApplications: React.FC = () => {
+//   const { user: employer, token } = useUser();
+//   const [applications, setApplications] = useState<ApplicationData[]>([]);
 //   const [isLoading, setIsLoading] = useState(true);
-//   const navigate = useNavigate();
-//   const { user: employer, token } = useUser(); // ✅ Get user and token from context
+//   const [error, setError] = useState<string | null>(null);
+//   const [chatState, setChatState] = useState<ChatState | null>(null); // State to control the chat dialog
 
 //   useEffect(() => {
-//     // Only fetch data if we have a logged-in user and a token
 //     if (!employer || !token) {
+//       setError("Please log in as an employer to view applications.");
 //       setIsLoading(false);
 //       return;
 //     }
 
 //     const fetchApplications = async () => {
 //       try {
-//         const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-//         // The backend route should get the employer ID from the token
-//         const res = await fetch(`${apiUrl}/api/applications/employer`, {
-//           headers: {
-//             'Authorization': `Bearer ${token}` // ✅ Send the auth token
-//           }
+//         const response = await apiClient.get('/api/applications/employer', {
+//           headers: { 'Authorization': `Bearer ${token}` }
 //         });
-
-//         if (!res.ok) {
-//           throw new Error("Failed to fetch applications. Are you logged in?");
-//         }
-        
-//         const data = await res.json();
-//         setApplications(data);
-//       } catch (error) {
-//         console.error('Fetch error:', error);
+//         setApplications(response.data);
+//       } catch (err) {
+//         console.error("Failed to fetch applications:", err);
+//         setError("Could not load applications. Please try again.");
 //       } finally {
 //         setIsLoading(false);
 //       }
 //     };
 
 //     fetchApplications();
-//   }, [employer, token]); // Re-fetch if the user or token changes
+//   }, [employer, token]);
 
-//   if (isLoading) {
-//     return <div>Loading applications...</div>;
-//   }
-
-//   if (!employer) {
-//     return <div>Please log in to view your applications. <Link to="/login" className="underline">Login</Link></div>;
-//   }
+//   if (isLoading) return <div className="p-8 text-center">Loading...</div>;
+//   if (error) return <div className="p-8 text-center text-red-500">{error}</div>;
 
 //   return (
-//     <div className="p-6 max-w-4xl mx-auto">
-//       <h2 className="text-2xl font-bold mb-4">Applications for {employer.companyName}</h2>
-      
-//       {applications.length === 0 && <p>No applications received yet.</p>}
+//     <div className="space-y-6 p-4 md:p-8">
+//       <div className="bg-gradient-to-r from-purple-500 to-blue-600 rounded-xl p-6 text-white text-center">
+//         <h1 className="text-3xl font-bold">Applications Received</h1>
+//       </div>
 
-//       {applications.map(app => (
-//         <div key={app._id} className="border p-4 rounded-lg shadow mb-6 bg-white">
-//           <h3 className="text-xl font-semibold">{app.applicant.firstName} {app.applicant.lastName}</h3>
-//           <p className="text-sm text-gray-700">Email: {app.applicant.email}</p>
-//           <p className="text-sm text-gray-700">Applied for: {app.job?.jobTitle || 'N/A'}</p>
-//           <div className="mt-4 flex justify-between items-center">
-//             <a href={"#"} className="text-blue-600 underline">View Resume</a>
-//             <button
-//               onClick={() => {
-//                 const roomId = app._id; // The unique application ID
-//                 const employerUsername = employer.companyName || "Employer";
-//                 navigate(`/chat?room=${roomId}&user=${encodeURIComponent(employerUsername)}`);
-//               }}
-//               className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
-//             >
-//               <MessageSquare className="h-4 w-4 mr-2" />
-//               Message
-//             </button>
-//           </div>
-//         </div>
-//       ))}
+//       {/* Application Cards */}
+//       <div className="space-y-4">
+//         {applications.length === 0 ? (
+//           <p className="text-center text-muted-foreground py-10">No applications found.</p>
+//         ) : (
+//           applications.map((app) => (
+//             <Card key={app._id}>
+//               <CardHeader>
+//                 <div className="flex justify-between items-start">
+//                   <CardTitle>{app.applicant.firstName} {app.applicant.lastName}</CardTitle>
+//                   <Badge>{app.status}</Badge>
+//                 </div>
+//                 <p className="text-sm text-muted-foreground">Applied for: {app.job.jobTitle}</p>
+//               </CardHeader>
+//               <CardContent>
+//                 <div className="flex justify-end space-x-2">
+//                   <Button variant="outline" size="sm"><Eye className="h-4 w-4 mr-1" /> View Details</Button>
+//                   <Button
+//                     variant="default"
+//                     size="sm"
+//                     onClick={() => {
+//                       // Set the state to open the dialog with the correct info
+//                       setChatState({
+//                         room: app._id, // The unique Application ID is the room
+//                         chatPartnerName: `${app.applicant.firstName} ${app.applicant.lastName}`,
+//                       });
+//                     }}
+//                   >
+//                     <MessageSquare className="h-4 w-4 mr-1" />
+//                     Message
+//                   </Button>
+//                 </div>
+//               </CardContent>
+//             </Card>
+//           ))
+//         )}
+//       </div>
+
+//       {/* Render the Chat Dialog */}
+//       {/* This component is always in the JSX, but only VISIBLE when chatState is not null */}
+//       {chatState && employer && (
+//         <ChatDialog
+//           isOpen={!!chatState}
+//           onClose={() => setChatState(null)} // This function closes the dialog
+//           socket={socket}
+//           room={chatState.room}
+//           username={employer.companyName || "Employer"} // The current user's name
+//           chatPartnerName={chatState.chatPartnerName} // The other person's name
+//         />
+//       )}
 //     </div>
 //   );
 // };
 
-// export default ViewApplication;
+// export default ViewApplications;

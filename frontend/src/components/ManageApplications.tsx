@@ -226,11 +226,32 @@ const ManageApplications = () => {
                       variant="outline"
                       size="sm"
                       className="border-job-success/20 hover:bg-job-success/5"
-                      onClick={() =>
-                        navigate(
-                          `/chat?room=${application.jobId}&user=${encodeURIComponent(user.name || "User")}`
-                        )
-                      }
+                      // onClick={() =>
+                      //   navigate(
+                      //     `/chat?room=${application.jobId}&user=${encodeURIComponent(user.name || "User")}`
+                      //   )
+                      // }
+
+                      onClick={() => {
+    // Use the SAME Application ID for the room
+    const roomId = application.id; 
+    // Get the job seeker's name from your auth context
+    const jobSeekerUsername = user.firstName || "Applicant"; 
+
+    navigate(`/chat?room=${roomId}&user=${encodeURIComponent(jobSeekerUsername)}`);
+  }}
+  // In the "Message" button's onClick handler
+
+// onClick={() => {
+//   const roomId = application._id;
+//   // We need to pass the employer's company name to the chat page
+//   // const chatPartnerName = application.job.postedBy?.companyName || "Recruiter";
+//   const chatPartnerName = application.job?.postedBy?.companyName || "Recruiter";
+
+  
+//   navigate(`/chat?room=${roomId}&partnerName=${encodeURIComponent(chatPartnerName)}`);
+// }}
+
                     >
                       <MessageSquare className="h-4 w-4 mr-1" />
                       Message
@@ -260,3 +281,131 @@ const ManageApplications = () => {
 };
 
 export default ManageApplications;
+
+
+// src/pages/ManageApplications.tsx (or components) - COMPLETELY UPDATED
+
+// import React, { useState, useEffect } from "react";
+// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+// import { Badge } from "@/components/ui/badge";
+// import { Button } from "@/components/ui/button";
+// import { MessageSquare, Eye } from "lucide-react";
+// import { useUser } from "@/contexts/UserContext";
+// import apiClient from "@/lib/axios";
+// import { ChatDialog } from "@/components/ChatDialog";
+// import { socket } from "@/lib/socket";
+
+// // Define the interface for this page's data
+// interface ApplicationData {
+//   _id: string;
+//   status: string;
+//   job: {
+//     _id: string;
+//     jobTitle: string;
+//     postedBy?: {
+//       _id: string;
+//       companyName: string;
+//     };
+//   };
+// }
+
+// // Define the shape of the data needed to open the chat
+// interface ChatState {
+//   room: string;
+//   chatPartnerName: string;
+// }
+
+// const ManageApplications: React.FC = () => {
+//   const { user: jobSeeker, token } = useUser();
+//   const [applications, setApplications] = useState<ApplicationData[]>([]);
+//   const [isLoading, setIsLoading] = useState(true);
+//   const [error, setError] = useState<string | null>(null);
+//   const [chatState, setChatState] = useState<ChatState | null>(null); // State for the chat dialog
+
+//   useEffect(() => {
+//     if (!jobSeeker || !token) {
+//       setError("Please log in as a job seeker to view your applications.");
+//       setIsLoading(false);
+//       return;
+//     }
+
+//     const fetchApplications = async () => {
+//       try {
+//         const response = await apiClient.get(`/api/applications/job-seeker/${jobSeeker._id}`, {
+//           headers: { 'Authorization': `Bearer ${token}` }
+//         });
+//         setApplications(response.data);
+//       } catch (err) {
+//         console.error("Failed to fetch applications:", err);
+//         setError("Could not load your applications.");
+//       } finally {
+//         setIsLoading(false);
+//       }
+//     };
+
+//     fetchApplications();
+//   }, [jobSeeker, token]);
+
+//   if (isLoading) return <div className="p-8 text-center">Loading...</div>;
+//   if (error) return <div className="p-8 text-center text-red-500">{error}</div>;
+
+//   return (
+//     <div className="space-y-6 p-4 md:p-8">
+//       <div className="bg-gradient-to-r from-green-500 to-teal-600 rounded-xl p-6 text-white text-center">
+//         <h1 className="text-3xl font-bold">Manage My Applications</h1>
+//       </div>
+
+//       <div className="space-y-4">
+//         {applications.length === 0 ? (
+//           <p className="text-center text-muted-foreground py-10">You have not applied to any jobs yet.</p>
+//         ) : (
+//           applications.map((app) => (
+//             <Card key={app._id}>
+//               <CardHeader>
+//                 <div className="flex justify-between items-start">
+//                   <CardTitle>{app.job.jobTitle}</CardTitle>
+//                   <Badge>{app.status}</Badge>
+//                 </div>
+//                 <p className="text-sm text-muted-foreground">
+//                   Applied to: {app.job.postedBy?.companyName || "Confidential Company"}
+//                 </p>
+//               </CardHeader>
+//               <CardContent>
+//                 <div className="flex justify-end space-x-2">
+//                   <Button variant="outline" size="sm"><Eye className="h-4 w-4 mr-1" /> View Details</Button>
+//                   <Button
+//                     variant="default"
+//                     size="sm"
+//                     onClick={() => {
+//                       setChatState({
+//                         room: app._id, // The unique Application ID
+//                         chatPartnerName: app.job.postedBy?.companyName || "Recruiter",
+//                       });
+//                     }}
+//                   >
+//                     <MessageSquare className="h-4 w-4 mr-1" />
+//                     Message
+//                   </Button>
+//                 </div>
+//               </CardContent>
+//             </Card>
+//           ))
+//         )}
+//       </div>
+
+//       {/* Render the Chat Dialog */}
+//       {chatState && jobSeeker && (
+//         <ChatDialog
+//           isOpen={!!chatState}
+//           onClose={() => setChatState(null)}
+//           socket={socket}
+//           room={chatState.room}
+//           username={jobSeeker.firstName || "Applicant"}
+//           chatPartnerName={chatState.chatPartnerName}
+//         />
+//       )}
+//     </div>
+//   );
+// };
+
+// export default ManageApplications;
