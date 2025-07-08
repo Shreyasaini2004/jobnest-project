@@ -63,10 +63,10 @@ import MyEvents from "@/components/MyEvents";
 import EmployerDashboardHome from "@/components/EmployerDashboardHome";
 import Analytics from "@/components/Analytics";
 import EmployerNotifications from "@/components/EmployerNotifications";
-// ❌ We no longer import EmployerMessages because it was deleted.
-// import EmployerMessages from "@/components/EmployerMessages";
+import EmployerMessages from "@/components/employermessages";
 
-// Define the type for the active section. We remove 'messages' from this list.
+
+// Define the type for the active section
 type ActiveSection = 
   'dashboard-home' | 
   'post-opening' | 
@@ -76,7 +76,8 @@ type ActiveSection =
   'create-event' | 
   'my-events' | 
   'analytics' | 
-  'notifications';
+  'notifications' |
+  'messages';
 
 const EmployerDashboard = () => {
   const [activeSection, setActiveSection] = useState<ActiveSection>('dashboard-home');
@@ -104,9 +105,7 @@ const EmployerDashboard = () => {
               {activeSection === 'my-events' && <MyEvents />}
               {activeSection === 'analytics' && <Analytics />}
               {activeSection === 'notifications' && <EmployerNotifications />}
-              
-              {/* ❌ The line that rendered EmployerMessages has been removed. */}
-              {/* {activeSection === 'messages' && <EmployerMessages />} */}
+              {activeSection === 'messages' && <EmployerMessages />}
             </main>
           </div>
         </div>
