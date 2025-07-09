@@ -8,12 +8,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useUser } from "@/contexts/UserContext";
 import { useToast } from "@/components/ui/use-toast";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import {
-  Calendar, MapPin, DollarSign, FileText,
-} from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar, MapPin, DollarSign, FileText, Loader2, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
+import { LocationAutocomplete } from "./LocationAutocomplete";
+import { generateJobDetails } from "@/services/aiService";
+import { toast } from "@/components/ui/use-toast";
 
 const PostOpening = () => {
   const [formData, setFormData] = useState({
@@ -29,18 +29,66 @@ const PostOpening = () => {
     benefits: "",
     registrationFee: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const { user } = useUser();
   const { toast } = useToast();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!user || !user._id) {
-      console.error("User not found or missing _id");
+  const handleGenerateWithAI = async () => {
+    if (!formData.jobTitle) {
+      toast({
+        title: "Job Title Required",
+        description: "Please enter a job title to generate details.",
+        variant: "destructive",
+      });
       return;
     }
 
+    setIsGenerating(true);
+    try {
+      const aiDetails = await generateJobDetails(formData.jobTitle, formData.jobType || 'full-time');
+      
+      setFormData(prev => ({
+        ...prev,
+        department: aiDetails.department || prev.department,
+        description: aiDetails.description || prev.description,
+        requirements: aiDetails.requirements || prev.requirements,
+        benefits: aiDetails.benefits || prev.benefits
+      }));
+
+      toast({
+        title: "Success!",
+        description: "Job details generated successfully!",
+        className: "bg-green-100 border-green-500 text-green-700",
+      });
+    } catch (error) {
+      console.error("AI Generation Error:", error);
+      toast({
+        title: "Generation Failed",
+        description: error instanceof Error ? error.message : "Failed to generate job details. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+    
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!user || !user._id) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to post a job opening.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
     const jobData = {
       jobTitle: formData.jobTitle,
       jobType: formData.jobType,
@@ -55,7 +103,7 @@ const PostOpening = () => {
       registrationFee: formData.registrationFee,
       postedBy: user._id,
     };
-
+    
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/jobs/create`, {
         method: "POST",
@@ -64,9 +112,40 @@ const PostOpening = () => {
       });
 
       const result = await response.json();
-      console.log("✅ Job posted:", result);
+      
+      if (response.ok) {
+        toast({
+          title: "Success!",
+          description: "Job opening posted successfully!",
+          className: "bg-green-100 border-green-500 text-green-700",
+        });
+        
+        // Reset form
+        setFormData({
+          jobTitle: '',
+          jobType: '',
+          department: '',
+          location: '',
+          salaryRange: '',
+          experience: '',
+          deadline: '',
+          description: '',
+          requirements: '',
+          benefits: '',
+          registrationFee: ''
+        });
+      } else {
+        throw new Error(result.message || 'Failed to post job opening');
+      }
     } catch (error) {
       console.error("❌ Job posting failed:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to post job opening. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -91,21 +170,38 @@ const PostOpening = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Job Title Dropdown */}
               <div className="space-y-2">
-                <Label htmlFor="jobTitle" className="text-sm font-medium text-slate-700">Job Title *</Label>
-                <Select
-                  value={formData.jobTitle}
-                  onValueChange={(value) => setFormData({ ...formData, jobTitle: value })}
-                >
-                  <SelectTrigger className="border-slate-300 focus:border-blue-500 focus:ring-blue-500">
-                    <SelectValue placeholder="Select Job Title" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Senior Frontend Developer">Senior Frontend Developer</SelectItem>
-                    <SelectItem value="Backend Engineer">Backend Engineer</SelectItem>
-                    <SelectItem value="UX Designer">UI Designer</SelectItem>
-                    <SelectItem value="Product Manager">Product Manager</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="jobTitle" className="text-sm font-medium text-slate-700">Job Title *</Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleGenerateWithAI}
+                    disabled={isGenerating || !formData.jobTitle}
+                    className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                  >
+                    {isGenerating ? (
+                      <>
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-3 w-3" />
+                        Generate with AI
+                      </>
+                    )}
+                  </Button>
+                </div>
+                <div className="relative">
+                  <Input
+                    id="jobTitle"
+                    placeholder="e.g., Senior Frontend Developer"
+                    value={formData.jobTitle}
+                    onChange={(e) => setFormData({...formData, jobTitle: e.target.value})}
+                    className="border-slate-300 focus:border-blue-500 focus:ring-blue-500 pr-20"
+                  />
+                </div>
               </div>
 
               {/* Job Type */}
@@ -144,12 +240,11 @@ const PostOpening = () => {
               <div className="space-y-2">
                 <Label htmlFor="location" className="text-sm font-medium text-slate-700">Location</Label>
                 <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <Input
-                    id="location"
-                    placeholder="e.g., San Francisco, CA"
+                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400 z-10" />
+                  <LocationAutocomplete
                     value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    onChange={(value) => setFormData({...formData, location: value})}
+                    placeholder="e.g., Mumbai, Maharashtra"
                     className="pl-10 border-slate-300 focus:border-blue-500 focus:ring-blue-500"
                   />
                 </div>
@@ -261,12 +356,26 @@ const PostOpening = () => {
               <Button type="button" variant="outline" className="px-6">
                 Save as Draft
               </Button>
-              <Button
-                type="submit"
-                className="px-6 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ duration: 0.2 }}
               >
-                Post Job Opening
-              </Button>
+                <Button 
+                  type="submit" 
+                  className={`px-6 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 transition-all duration-300 ${isSubmitting ? 'opacity-80' : ''}`}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Posting...
+                    </>
+                  ) : (
+                    'Post Job Opening'
+                  )}
+                </Button>
+              </motion.div>
             </div>
           </form>
         </CardContent>

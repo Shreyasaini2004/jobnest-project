@@ -12,9 +12,10 @@ interface SavedJobCardProps {
   job: Job;
   removeJob: (id: string) => void;
   toggleReminder: (jobId: string, deadline?: Date) => void;
+  onApply?: (jobId: string) => void;
 }
 
-const SavedJobCard = ({ job, removeJob, toggleReminder }: SavedJobCardProps) => {
+const SavedJobCard = ({ job, removeJob, toggleReminder, onApply }: SavedJobCardProps) => {
   const [selectedDeadline, setSelectedDeadline] = useState<Date | undefined>(undefined);
   const [isReminderPopoverOpen, setIsReminderPopoverOpen] = useState(false);
 
@@ -137,7 +138,10 @@ const SavedJobCard = ({ job, removeJob, toggleReminder }: SavedJobCardProps) => 
                 <ExternalLink className="h-4 w-4 mr-1" />
                 View Details
               </Button>
-              <Button className="bg-job-primary hover:bg-job-primary/90 text-white">
+              <Button 
+                className="bg-job-primary hover:bg-job-primary/90 text-white"
+                onClick={() => onApply && onApply(job.id)}
+              >
                 Apply Now
               </Button>
             </div>

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useUser } from './UserContext';
+import { applicationApi } from '@/lib/applicationApi';
 
 export interface Job {
   id: string;

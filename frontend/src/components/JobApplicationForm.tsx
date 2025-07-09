@@ -6,20 +6,34 @@ import { useFormError } from '@/lib/hooks/useFormError';
 import { FormField } from './FormField';
 import { Button } from './ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ChevronDown, ChevronUp } from 'lucide-react';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
+import { Loader2, FileText } from 'lucide-react';
+import { jobApi } from '@/lib/realApi';
+import { useUser } from '@/contexts/UserContext';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import ATSScoreAnalysis from './ATSScoreAnalysis';
+import { Badge } from './ui/badge';
+import { Card, CardContent, CardFooter } from './ui/card';
 
 // Define the form schema using Zod
 const applicationSchema = z.object({
-  name: z.string().min(2).max(100),
-  phoneNumber: z
+  coverLetter: z
     .string()
-    .min(10, { message: 'Phone number must be at least 10 digits' })
-    .regex(/^[\+]?[1-9][\d]{0,15}$/, { message: 'Please enter a valid phone number' }),
-  email: z.string().email({ message: 'Please enter a valid email address' }),
-  coverLetter: z.string().min(50).max(2000),
-  resumeUrl: z.string().url({ message: 'Please enter a valid resume URL' }),
-  githubLinkedinUrl: z.string().url().optional().or(z.literal('')),
+    .min(50, { message: 'Cover letter must be at least 50 characters' })
+    .max(2000, { message: 'Cover letter must not exceed 2000 characters' }),
+  resumeUrl: z
+    .string()
+    .url({ message: 'Please enter a valid URL' })
+    .optional()
+    .or(z.literal('')),
+  portfolioUrl: z
+    .string()
+    .url({ message: 'Please enter a valid URL' })
+    .optional()
+    .or(z.literal('')),
+  experience: z.string().min(1, { message: 'Experience is required' }),
+  location: z.string().min(1, { message: 'Location is required' }),
+  education: z.string().min(1, { message: 'Education is required' }),
+  resumeScore: z.number().optional().nullable(),
   agreeToTerms: z
     .boolean()
     .refine((val) => val === true, { message: 'You must agree to the terms and conditions' }),
@@ -46,44 +60,43 @@ const JobApplicationForm: React.FC<JobApplicationFormProps> = ({
 }) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [showTerms, setShowTerms] = useState(false);
-
-  const form = useZodForm(applicationSchema, {
-    defaultValues: {
-      name: '',
-      phoneNumber: '',
-      email: '',
-      coverLetter: '',
-      resumeUrl: '',
-      githubLinkedinUrl: '',
-      agreeToTerms: false,
-    },
-  });
-
-  const { hasErrors } = useFormError(form.formState.errors);
-
-  const applyToJob = async (data: { jobId: string; postedBy: string; application: ApplicationFormValues }) => {
+  const { user } = useUser();
+  const [showATSAnalysis, setShowATSAnalysis] = useState(false);
+  const [atsScore, setAtsScore] = useState<number | null>(null);
+  
+  // Function for applying to jobs using real API
+  const applyToJob = async (data: { jobId: string; application: any }) => {
+    if (!user || user.userType !== 'job-seeker') {
+      toast({
+        title: 'Authentication Required',
+        description: 'You must be logged in as a job seeker to apply for jobs.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     setIsLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/applications`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          jobId: data.jobId,
-          postedBy: data.postedBy,
-          ...data.application,
-        }),
-      });
-
-      if (!res.ok) throw new Error('Failed to submit application');
-
-      toast({
-        title: 'Application Submitted',
-        description: 'Your application has been submitted successfully!',
-      });
-
-      if (onSuccess) onSuccess();
-    } catch (err) {
+      // Add the job seeker ID to the application data
+      const applicationData = {
+        ...data.application,
+        jobSeekerId: user._id
+      };
+      
+      // Call the real API
+      const success = await jobApi.applyForJob(data.jobId, applicationData);
+      
+      if (success) {
+        toast({
+          title: 'Application Submitted',
+          description: 'Your application has been submitted successfully!',
+        });
+        if (onSuccess) onSuccess();
+      } else {
+        throw new Error('Application submission failed');
+      }
+    } catch (error) {
+      console.error('Error applying for job:', error);
       toast({
         title: 'Submission Failed',
         description: 'There was an error submitting your application.',
@@ -94,69 +107,153 @@ const JobApplicationForm: React.FC<JobApplicationFormProps> = ({
     }
   };
 
+  const handleATSScoreUpdate = (score: number) => {
+    setAtsScore(score);
+    setShowATSAnalysis(false);
+  };
+  
+  // Use our custom hook for form validation with Zod
+  const form = useZodForm(applicationSchema, {
+    defaultValues: {
+      coverLetter: '',
+      resumeUrl: '',
+      portfolioUrl: '',
+      experience: '',
+      location: '',
+      education: '',
+      resumeScore: null,
+      agreeToTerms: false,
+    },
+  });
+  
+  // Use our custom hook for form error handling
+  const { hasErrors } = useFormError(form.formState.errors);
+  
+  // Create a submit handler with type safety
   const onSubmit = createSubmitHandler<typeof applicationSchema>((data) => {
-    applyToJob({ jobId, postedBy, application: data });
+    applyToJob({
+      jobId,
+      application: {
+        coverLetter: data.coverLetter,
+        resumeUrl: data.resumeUrl || undefined,
+        portfolioUrl: data.portfolioUrl || undefined,
+        experience: data.experience,
+        location: data.location,
+        education: data.education,
+        resumeScore: data.resumeScore,
+      },
+    });
   });
 
   return (
-    <div className="w-full space-y-6">
-      <div className="text-center pb-4">
-        <p className="text-foreground font-bold">Submit your application to {companyName}</p>
-        <p className="text-foreground">{jobTitle}</p>
-      </div>
+    <Card className="w-full max-w-2xl mx-auto">
+      <CardContent className="p-6">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Apply for {jobTitle}
+          </h2>
+          <p className="text-gray-600">
+            at {companyName}
+          </p>
+        </div>
 
-      <FormProvider {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <FormField name="name" label="Full Name" type="text" required />
-          <FormField name="phoneNumber" label="Phone Number" type="tel" placeholder="+1234567890" required />
-          <FormField name="email" label="Email" type="email" required />
-          <FormField name="coverLetter" label="Cover Letter" type="textarea" rows={6} required />
-          <FormField
-            name="resumeUrl"
-            label="Resume URL"
-            type="url"
-            placeholder="https://example.com/resume.pdf"
-            description="Link to your resume (Google Drive, Dropbox, etc.)"
-            required
-          />
-          <FormField
-            name="githubLinkedinUrl"
-            label="GitHub or LinkedIn URL"
-            type="url"
-            placeholder="https://github.com/username or https://linkedin.com/in/username"
-          />
-
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <FormField name="agreeToTerms" type="checkbox" checkboxLabel="" required />
-              <span className="text-sm">
-                I agree to the{' '}
-                <Collapsible open={showTerms} onOpenChange={setShowTerms}>
-                  <CollapsibleTrigger asChild>
-                    <button type="button" className="text-blue-600 underline inline-flex items-center">
-                      terms and conditions
-                      {showTerms ? <ChevronUp className="h-3 w-3 ml-1" /> : <ChevronDown className="h-3 w-3 ml-1" />}
-                    </button>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="mt-4 p-4 border rounded-lg bg-gray-50 text-sm">
-                    <ul className="list-disc list-inside space-y-1 ml-4">
-                      <li>All information provided is accurate and truthful</li>
-                      <li>You consent to background checks if required</li>
-                      <li>You understand this is not a guarantee of employment</li>
-                      <li>Your personal information will be used solely for recruitment purposes</li>
-                      <li>You can withdraw your application at any time</li>
-                    </ul>
-                  </CollapsibleContent>
-                </Collapsible>
-              </span>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
+          <CardContent className="space-y-4">
+            <FormField
+              name="coverLetter"
+              label="Cover Letter"
+              type="textarea"
+              placeholder="Introduce yourself and explain why you're a good fit for this position..."
+              rows={6}
+              required
+            />
+            
+            <FormField
+              name="resumeUrl"
+              label="Resume URL"
+              type="url"
+              placeholder="https://example.com/my-resume.pdf"
+              description="Link to your resume (Google Drive, Dropbox, etc.)"
+            />
+            
+            <FormField
+              name="portfolioUrl"
+              label="Portfolio URL"
+              type="url"
+              placeholder="https://myportfolio.com"
+              description="Link to your portfolio or personal website"
+            />
+            
+            <FormField
+              name="experience"
+              label="Experience"
+              type="text"
+              placeholder="e.g. 3 years in frontend development"
+              required
+            />
+            
+            <FormField
+              name="location"
+              label="Location"
+              type="text"
+              placeholder="e.g. San Francisco, CA"
+              required
+            />
+            
+            <FormField
+              name="education"
+              label="Education"
+              type="text"
+              placeholder="e.g. B.Sc. in Computer Science, Stanford University"
+              required
+            />
+            
+            {/* ATS Score Display */}
+            <div className="flex items-center justify-between border p-3 rounded-md">
+              <div>
+                <h3 className="font-medium">ATS Resume Score</h3>
+                <p className="text-sm text-gray-500">Analyze how well your resume matches this job</p>
+              </div>
+              <div className="flex items-center gap-2">
+                {atsScore !== null && (
+                  <Badge className={`${atsScore >= 80 ? 'bg-green-500' : atsScore >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`}>
+                    {atsScore}%
+                  </Badge>
+                )}
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setShowATSAnalysis(true)}
+                  className="flex items-center gap-2"
+                >
+                  <FileText className="h-4 w-4" />
+                  {atsScore === null ? 'Analyze Resume' : 'Re-analyze'}
+                </Button>
+              </div>
             </div>
-          </div>
 
-          <div className="flex justify-between pt-4">
-            <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+            <FormField
+              name="agreeToTerms"
+              type="checkbox"
+              checkboxLabel="I agree to the terms and conditions"
+              required
+            />
+          </CardContent>
+          
+          <CardFooter className="flex justify-between">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              disabled={isLoading}
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading || hasErrors}>
+            <Button
+              type="submit"
+              disabled={isLoading || hasErrors}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -166,10 +263,23 @@ const JobApplicationForm: React.FC<JobApplicationFormProps> = ({
                 'Submit Application'
               )}
             </Button>
-          </div>
+          </CardFooter>
         </form>
-      </FormProvider>
-    </div>
+
+        {/* ATS Analysis Dialog */}
+        <Dialog open={showATSAnalysis} onOpenChange={setShowATSAnalysis}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Resume ATS Analysis for {jobTitle}</DialogTitle>
+            </DialogHeader>
+            <ATSScoreAnalysis 
+              onScoreUpdate={handleATSScoreUpdate}
+              jobDescription={`Job Title: ${jobTitle}\nCompany: ${companyName}\n\nJob Description: This is a position for ${jobTitle} at ${companyName}. Please analyze the resume against this job.`}
+            />
+          </DialogContent>
+        </Dialog>
+      </CardContent>
+    </Card>
   );
 };
 

@@ -42,10 +42,11 @@ export function EmployerLogin() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
+        credentials: 'include', // Important for cookies
       });
   
       const result = await response.json();
-      console.log('Server response:', result); //
+      console.log('Server response:', result);
   
       if (!response.ok) {
         toast({
@@ -168,4 +169,91 @@ export function EmployerLogin() {
       </CardContent>
     </div>
   );
-} 
+}
+
+
+// EmployerLogin.tsx (UPDATED)
+// import { useState } from 'react';
+// import { useForm } from 'react-hook-form';
+// import { zodResolver } from '@hookform/resolvers/zod';
+// import * as z from 'zod';
+// import { Button } from "@/components/ui/button";
+// import { Input } from "@/components/ui/input";
+// import { Label } from "@/components/ui/label";
+// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+// import { useToast } from "@/components/ui/use-toast";
+// import { Checkbox } from "@/components/ui/checkbox";
+// import { Eye, EyeOff } from "lucide-react";
+// import { Link, useNavigate } from "react-router-dom";
+// import { useUser } from "@/contexts/UserContext"; // <-- Your existing hook
+
+// const loginSchema = z.object({
+//   email: z.string().email('Please enter a valid email address'),
+//   password: z.string().min(6, 'Password must be at least 6 characters'),
+// });
+
+// type LoginFormValues = z.infer<typeof loginSchema>;
+
+// export function EmployerLogin() {
+//   const [isLoading, setIsLoading] = useState(false);
+//   const [showPassword, setShowPassword] = useState(false);
+//   const { toast } = useToast();
+//   const { login } = useUser(); // ✅ GET THE NEW 'login' FUNCTION
+//   const navigate = useNavigate();
+  
+//   const {
+//     register,
+//     handleSubmit,
+//     formState: { errors },
+//   } = useForm<LoginFormValues>({
+//     resolver: zodResolver(loginSchema),
+//   });
+
+//   const onSubmit = async (data: LoginFormValues) => {
+//     setIsLoading(true);
+//     try {
+//       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+//       const response = await fetch(`${apiUrl}/api/auth/employer/login`, {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify(data),
+//       });
+  
+//       const result = await response.json();
+  
+//       if (!response.ok) {
+//         // Use the error message from the backend if available
+//         throw new Error(result.message || "Invalid credentials");
+//       }
+  
+//       // ✅ On success, call the context's login function
+//       // This will store the user and token in context and localStorage
+//       login(result.user, result.token); 
+      
+//       toast({
+//         title: "Welcome Back!",
+//         description: `Successfully logged in as ${result.user.companyName || result.user.email}.`,
+//       });
+  
+//       navigate("/employer-dashboard"); // Redirect to the dashboard
+  
+//     } catch (error) {
+//       console.error("Login error:", error);
+//       toast({
+//         title: "Login Failed",
+//         description: error instanceof Error ? error.message : "An unknown error occurred.",
+//         variant: "destructive",
+//       });
+//     } finally {
+//       setIsLoading(false);
+//     }
+//   };
+  
+//   // ... The rest of your JSX remains exactly the same ...
+//   // (Paste the form JSX from your original file here)
+//   return (
+//     <div className="px-8 pt-8">
+//       {/*... The entire form JSX ...*/}
+//     </div>
+//   );
+// }

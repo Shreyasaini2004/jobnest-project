@@ -1,20 +1,25 @@
+
 import express from "express";
 import bcrypt from "bcryptjs";
-import multer from "multer";
-import path from "path";
+import multer from 'multer';
+import path from 'path';
+import jwt from 'jsonwebtoken';
 import fs from "fs";
 import { fileURLToPath } from "url";
-import Employer from "../models/employer.js";
-import JobSeeker from "../models/jobSeeker.js";
+import { dirname } from 'path';
 import cloudinary from "../config/cloudinary.js";
 
-const router = express.Router();
+// Import models
+import Employer from "../models/employer.js";
+import JobSeeker from "../models/jobSeeker.js";
 
-// --------------------------
+const router = express.Router();
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
+
 // __dirname workaround in ESM
 // --------------------------
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname = dirname(__filename);
 
 // Ensure uploads directory exists
 const uploadsDir = path.join(__dirname, '../uploads');
@@ -117,37 +122,57 @@ router.post("/employer/signup", async (req, res) => {
 // ✅ Employer Login
 // ---------------------------------------------------
 router.post("/employer/login", async (req, res) => {
-  const { email, password } = req.body;
 
-  try {
-    const employer = await Employer.findOne({ email });
-    if (!employer) {
-      return res.status(400).json({ error: "Invalid email or password" });
+    const { email, password } = req.body;
+  
+    try {
+      const employer = await Employer.findOne({ email });
+      if (!employer) {
+        return res.status(400).json({ error: "Invalid email or password" });
+      }
+  
+      const isMatch = await bcrypt.compare(password, employer.password);
+      if (!isMatch) {
+        return res.status(400).json({ error: "Invalid email or password" });
+      }
+
+      // Create JWT
+      const token = jwt.sign(
+        { _id: employer._id, role: 'employer', email: employer.email },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
+      // Set HTTP-only cookie
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      });
+  
+      res.status(200).json({
+        message: "Login successful",
+        user: {
+          _id: employer._id,
+          firstName: employer.firstName,
+          lastName: employer.lastName,
+          name: employer.firstName + " " + employer.lastName,
+          email: employer.email,
+          userType: "employer",
+          avatar: employer.avatar // Include the avatar if it exists
+        }
+      });
+  
+    } catch (err) {
+      console.error("Employer Login Error:", err);
+      res.status(500).json({ error: "Login failed" });
     }
+  });
+  
 
-    const isMatch = await bcrypt.compare(password, employer.password);
-    if (!isMatch) {
-      return res.status(400).json({ error: "Invalid email or password" });
-    }
 
-    res.status(200).json({
-      message: "Login successful",
-      user: {
-        _id: employer._id,
-        firstName: employer.firstName,
-        lastName: employer.lastName,
-        name: `${employer.firstName} ${employer.lastName}`,
-        email: employer.email,
-        userType: "employer",
-        avatar: employer.avatar
-      },
-    });
 
-  } catch (err) {
-    console.error("Employer Login Error:", err);
-    res.status(500).json({ error: "Login failed" });
-  }
-});
 
 
 // ---------------------------------------------------
@@ -203,36 +228,52 @@ router.post("/jobseeker/signup", async (req, res) => {
 // ✅ Job Seeker Login
 // ---------------------------------------------------
 router.post("/jobseeker/login", async (req, res) => {
-  const { email, password } = req.body;
 
-  try {
-    const jobSeeker = await JobSeeker.findOne({ email });
-    if (!jobSeeker) {
-      return res.status(400).json({ error: "Invalid email or password" });
-    }
-
-    const isMatch = await bcrypt.compare(password, jobSeeker.password);
-    if (!isMatch) {
-      return res.status(400).json({ error: "Invalid email or password" });
-    }
-
-    res.status(200).json({
-      message: "Login successful",
-      user: {
-        _id: jobSeeker._id,
-        firstName: jobSeeker.firstName,
-        lastName: jobSeeker.lastName,
-        email: jobSeeker.email,
-        userType: "job-seeker",
-        avatar: jobSeeker.avatar
+    const { email, password } = req.body;
+  
+    try {
+      const jobSeeker = await JobSeeker.findOne({ email });
+      if (!jobSeeker) {
+        return res.status(400).json({ error: "Invalid email or password" });
       }
-    });
+  
+      const isMatch = await bcrypt.compare(password, jobSeeker.password);
+      if (!isMatch) {
+        return res.status(400).json({ error: "Invalid email or password" });
+      }
 
-  } catch (err) {
-    console.error("Login Error:", err);
-    res.status(500).json({ error: "Login failed" });
-  }
-});
+      // Create JWT
+      const token = jwt.sign(
+        { _id: jobSeeker._id, role: 'job-seeker', email: jobSeeker.email },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
+      // Set HTTP-only cookie
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      });
+  
+      res.status(200).json({
+        message: "Login successful",
+        user: {
+          _id: jobSeeker._id, // Include the user ID
+          firstName: jobSeeker.firstName,
+          lastName: jobSeeker.lastName,
+          email: jobSeeker.email,
+          userType: "job-seeker",
+          avatar: jobSeeker.avatar // Include the avatar if it exists
+        }
+      });
+      
+    } catch (err) {
+      console.error("Login Error:", err);
+      res.status(500).json({ error: "Login failed" });
+    }
+  });
 
 
 // ---------------------------------------------------
@@ -298,6 +339,27 @@ router.post('/users/upload-avatar', upload.single('avatar'), async (req, res) =>
     console.error('Avatar upload error:', err);
     res.status(500).json({ error: `Failed to upload avatar: ${err.message}` });
   }
+});
+
+
+// Employer Logout Route
+router.post("/employer/logout", (req, res) => {
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+  });
+  res.json({ message: 'Logged out successfully' });
+});
+
+// Job Seeker Logout Route
+router.post("/jobseeker/logout", (req, res) => {
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+  });
+  res.json({ message: 'Logged out successfully' });
 });
 
 export default router;

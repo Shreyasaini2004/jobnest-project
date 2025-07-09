@@ -13,7 +13,17 @@ const employerSchema = new mongoose.Schema({
     type: String,
     default: "employer"
   },
-  avatar: String // URL or path to profile image
+  avatar: String, // URL or path to profile image
+  interests: [String],
+  jobTypes: [String],
+  industries: [String],
+  languages: [String],
+  certifications: [String],
+  portfolio: String,
+  bio: String,
+  experience: String,
+  education: String,
+  skills: String
 }, { timestamps: true });
 
 const Employer = mongoose.model("Employer", employerSchema);

@@ -58,7 +58,6 @@ router.post("/create", async (req, res) => {
   }
 });
 
-
 // ----------------------------
 // ✅ GET /api/jobs/all
 // ----------------------------
@@ -79,10 +78,12 @@ router.get("/all", async (req, res) => {
 // ----------------------------
 router.get("/featured", async (req, res) => {
   try {
+    // Get the 6 most recent jobs
     const featuredJobs = await Job.find()
       .sort({ createdAt: -1 })
       .limit(6)
       .populate('postedBy', 'companyName');
+    
     res.status(200).json(featuredJobs);
   } catch (err) {
     console.error("❌ Error fetching featured jobs:", err.message);
@@ -121,6 +122,7 @@ router.get("/search/filters", async (req, res) => {
   try {
     const { searchTerm, jobType, location } = req.query;
 
+    // Build the query object
     const query = {};
 
     if (searchTerm) {
@@ -161,7 +163,9 @@ router.get("/employer/:employerId", async (req, res) => {
       return res.status(400).json({ error: "Invalid employer ID format" });
     }
 
-    const jobs = await Job.find({ postedBy: employerId }).sort({ createdAt: -1 });
+    const jobs = await Job.find({ postedBy: employerId })
+      .sort({ createdAt: -1 })
+      .populate('postedBy', 'companyName');
     res.status(200).json(jobs);
   } catch (err) {
     console.error("❌ Error fetching employer jobs:", err.message);

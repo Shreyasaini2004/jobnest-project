@@ -7,9 +7,16 @@ import SavedJobCard from "./SavedJobCard";
 import SavedJobsEmptyState from "./SavedJobsEmptyState";
 import ErrorBoundary from "./ErrorBoundary";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
+import { applicationApi } from "@/lib/applicationApi";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+import { useUser } from "@/contexts/UserContext";
 
 const SavedJobs = () => {
   const { savedJobs, removeJob, toggleReminder } = useSavedJobs();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const { user } = useUser();
   
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
@@ -39,6 +46,38 @@ const SavedJobs = () => {
       })
       .slice(0, 3); // Show only the 3 most imminent deadlines
   }, [savedJobs]);
+
+  const handleApply = async (jobId) => {
+    if (!user || !user._id) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to apply for jobs",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      // Check if already applied
+      const hasApplied = await applicationApi.checkJobApplication(jobId, user._id);
+      
+      if (hasApplied) {
+        toast({
+          title: "Already applied",
+          description: "You have already applied for this job",
+          variant: "default"
+        });
+        return;
+      }
+      
+      // Navigate to job application page
+      navigate(`/jobs/${jobId}`);
+    } catch (error) {
+      console.error('Error checking application status:', error);
+      // Navigate anyway if check fails
+      navigate(`/jobs/${jobId}`);
+    }
+  };
 
   const handleToggleReminder = (jobId: string, deadline?: Date) => {
     toggleReminder(jobId, deadline);
@@ -88,7 +127,8 @@ const SavedJobs = () => {
             key={job.id} 
             job={job} 
             removeJob={removeJob} 
-            toggleReminder={handleToggleReminder} 
+            toggleReminder={handleToggleReminder}
+            onApply={handleApply}
           />
         ))}
       </div>
