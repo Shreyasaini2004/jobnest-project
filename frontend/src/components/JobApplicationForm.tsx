@@ -80,7 +80,8 @@ const JobApplicationForm: React.FC<JobApplicationFormProps> = ({
       // Add the job seeker ID to the application data
       const applicationData = {
         ...data.application,
-        jobSeekerId: user._id
+        jobSeekerId: user._id,
+        postedBy: data.postedBy
       };
       
       console.log("📨 Final submit payload:", {
@@ -152,7 +153,6 @@ const JobApplicationForm: React.FC<JobApplicationFormProps> = ({
         location: data.location,
         education: data.education,
         resumeScore: data.resumeScore,
-        postedBy // <-- add postedBy here
       },
     });
   });

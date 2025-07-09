@@ -2,7 +2,24 @@
 import { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { userApi } from '@/lib/userApi';
 import axios from '@/lib/axios';
-import { User } from '@/types/user';
+
+interface User {
+  _id: string;
+  name: string;
+  email: string;
+  userType: "job-seeker" | "employer";
+  createdAt?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  location?: string;
+  experience?: string;
+  education?: string;
+  skills?: string;
+  bio?: string;
+  avatar?: string;
+  embedding?: number[];
+}
 
 interface UserContextType {
   user: User | null;

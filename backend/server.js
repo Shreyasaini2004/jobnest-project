@@ -10,6 +10,8 @@ import { Server } from 'socket.io';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+// At the top with other imports
+import Message from './models/message.js';
 
 // Configure dotenv
 dotenv.config();
@@ -30,6 +32,7 @@ import embeddingRoutes from './routes/embedding.js';
 import recommendationRoutes from './routes/recommendations.js';
 import jobSeekerRoutes from './routes/jobSeekerRoutes.js';
 import testEmailRoutes from './routes/testEmail.js';
+import chatRoutes from './routes/chat.js';
 
 // ===================================
 // INITIALIZE APP & UNIFIED SERVER
@@ -105,7 +108,9 @@ io.on('connection', (socket) => {
   });
 });
 
-// API Routes
+// ===================================
+// API ROUTES
+// ===================================
 app.use('/api/auth', authRoutes);
 app.use('/api/auth/users', userRoutes);
 app.use('/api/jobs', jobRoutes);
@@ -117,6 +122,7 @@ app.use('/api/embedding', embeddingRoutes);
 app.use('/api/recommendations', recommendationRoutes);
 app.use('/api', jobSeekerRoutes);
 app.use('/api', testEmailRoutes);
+app.use('/api/chat', chatRoutes);
 
 // ✅ Add this route for frontend testing
 app.get('/api/hello', (req, res) => {
