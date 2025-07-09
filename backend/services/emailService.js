@@ -35,4 +35,24 @@ const sendJobAlertEmail = async (userEmail, userName, job) => {
   }
 };
 
+const sendWelcomeEmail = async (userEmail, userName) => {
+  try {
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: userEmail,
+      subject: `🎉 Welcome to JobNest, ${userName}!`,
+      html: `
+        <h2>Welcome, ${userName}!</h2>
+        <p>Thank you for joining JobNest. We're excited to have you on board.</p>
+        <p>Start exploring jobs and opportunities tailored just for you.</p>
+        <hr/>
+        <small>If you have any questions, feel free to contact our support team.</small>
+      `
+    });
+    console.log(`📧 Welcome email sent to ${userEmail}`);
+  } catch (error) {
+    console.error(`❌ Error sending welcome email to ${userEmail}:`, error.message);
+  }
+};
+
 export { sendWelcomeEmail, sendJobAlertEmail };

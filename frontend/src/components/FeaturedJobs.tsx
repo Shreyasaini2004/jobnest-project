@@ -232,6 +232,7 @@ const FeaturedJobs = () => {
                   description={job.description}
                   skills={job.skills}
                   featured={job.featured}
+                  postedById={job.postedById || job.id}
                 />
               </motion.div>
             )) : (
