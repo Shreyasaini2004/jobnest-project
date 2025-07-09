@@ -1,7 +1,8 @@
-const express = require('express');
+import express from 'express';
+import Event from '../models/event.js';
+import requireAuth from '../middleware/auth.js';
+
 const router = express.Router();
-const Event = require('../models/event');
-const requireAuth = require('../middleware/auth');
 
 // Middleware: require employer role
 function requireEmployer(req, res, next) {
@@ -85,4 +86,4 @@ router.delete('/:id', requireAuth, requireEmployer, requireEventCreator, async (
   }
 });
 
-module.exports = router; 
+export default router; 

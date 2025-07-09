@@ -19,6 +19,7 @@ const __dirname = dirname(__filename);
 // Import routes
 import authRoutes from './routes/auth.js';
 import jobRoutes from './routes/jobs.js';
+import eventsRoutes from './routes/events.js';
 
 // ===================================
 // INITIALIZE APP & UNIFIED SERVER
@@ -32,7 +33,10 @@ const io = new Server(server, {
   }
 });
 
-app.use(cors());
+app.use(cors({
+  origin: "http://localhost:8080",
+  credentials: true
+}));
 app.use(express.json());
 app.use(cookieParser());
 
@@ -93,6 +97,7 @@ io.on('connection', (socket) => {
 
 app.use('/api/auth', authRoutes);
 app.use("/api/jobs", jobRoutes);
+app.use('/api/events', eventsRoutes);
 
 // ✅ Add this route for frontend testing
 app.get('/api/hello', (req, res) => {

@@ -11,7 +11,7 @@ export default defineConfig(({ mode }) => ({
     strictPort: false, // Allow fallback to another port if 8080 is in use
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: 'http://localhost:5000',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path,

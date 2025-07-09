@@ -19,7 +19,7 @@ export const userApi = {
             ? `${response.data.firstName} ${response.data.lastName}` 
             : response.data.name || 'User',
           email: response.data.email,
-          userType: userType === 'employer' ? 'employer' : 'job-seeker',
+          userType: userType === 'employer' ? 'employer' as const : 'job-seeker' as const,
           firstName: response.data.firstName,
           lastName: response.data.lastName,
           phone: response.data.phone,

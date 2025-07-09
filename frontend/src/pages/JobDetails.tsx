@@ -481,6 +481,7 @@ const JobDetails = () => {
                       jobId={job.id}
                       jobTitle={job.title}
                       companyName={job.company}
+                      postedBy={job.postedById}
                       onSuccess={() => setShowApplicationForm(false)}
                       onCancel={() => setShowApplicationForm(false)}
                     />

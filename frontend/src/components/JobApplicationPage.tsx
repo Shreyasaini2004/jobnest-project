@@ -2,8 +2,8 @@ import { useParams } from "react-router-dom";
 import JobApplicationForm from "@/components/JobApplicationForm";
 
 const mockJobs = {
-  job1: { title: "Senior React Developer", company: "TechCorp Inc." },
-  job2: { title: "UX/UI Designer", company: "DesignHub" },
+  job1: { title: "Senior React Developer", company: "TechCorp Inc.", postedBy: "recruiter1" },
+  job2: { title: "UX/UI Designer", company: "DesignHub", postedBy: "recruiter2" },
   // ... other job info
 };
 
@@ -19,6 +19,7 @@ const JobApplicationPage = () => {
         jobId={jobId!}
         jobTitle={job.title}
         companyName={job.company}
+        postedBy={job.postedBy}
       />
     </div>
   );

@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const SavedAnalysisSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -11,4 +11,5 @@ const SavedAnalysisSchema = new mongoose.Schema({
   suggestions: [String]
 });
 
-module.exports = mongoose.model('SavedAnalysis', SavedAnalysisSchema); 
+const SavedAnalysis = mongoose.model('SavedAnalysis', SavedAnalysisSchema);
+export default SavedAnalysis; 

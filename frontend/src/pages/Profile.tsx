@@ -16,10 +16,26 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function ProfilePage() {
-  const { user } = useUser();
+  const { user, setUser } = useUser();
   const { toast } = useToast();
   const navigate = useNavigate();
   const initials = (user?.firstName || 'U')[0]?.toUpperCase() + (user?.lastName || '')[0]?.toUpperCase();
+
+  // Add form state for editing profile
+  const [form, setForm] = useState({
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
+    location: user?.location || '',
+    experience: user?.experience || '',
+    education: user?.education || '',
+    skills: user?.skills || '',
+    bio: user?.bio || '',
+  });
+
+  // Add edit mode state
+  const [editMode, setEditMode] = useState(false);
 
   // Profile completion calculation (simple example: count filled fields)
   const profileFields = ['firstName', 'lastName', 'email', 'phone', 'location', 'experience', 'education', 'skills', 'bio'];

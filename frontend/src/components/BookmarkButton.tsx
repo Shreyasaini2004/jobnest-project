@@ -26,6 +26,7 @@ const BookmarkButton = ({ job }: BookmarkButtonProps) => {
         posted: job.posted || '',
         description: job.description,
         skills: job.skills || [],
+        postedById: job.postedById,
       });
     }
   };

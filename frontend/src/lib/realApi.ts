@@ -73,7 +73,8 @@ export const jobApi = {
         description: job.description || '',
         skills: job.requirements ? job.requirements.split(',').map((skill: string) => skill.trim()) : [],
         featured: false,
-        deadline: job.deadline ? new Date(job.deadline) : undefined
+        deadline: job.deadline ? new Date(job.deadline) : undefined,
+        postedById: job.postedBy?._id || 'Unknown Recruiter'
       };
     } catch (error) {
       console.error('Error fetching job details:', error);

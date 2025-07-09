@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { VariableSizeList, ListChildComponentProps } from 'react-window';
+import React from "react";
 
 /**
  * Configuration options for the virtualized list

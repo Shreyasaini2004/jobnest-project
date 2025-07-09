@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const applicationSchema = new mongoose.Schema({
   jobSeeker: {
@@ -47,4 +47,5 @@ const applicationSchema = new mongoose.Schema({
 // Create a compound index to ensure a job seeker can only apply once to a specific job
 applicationSchema.index({ jobSeeker: 1, job: 1 }, { unique: true });
 
-module.exports = mongoose.model('Application', applicationSchema);
+const Application = mongoose.model('Application', applicationSchema);
+export default Application;

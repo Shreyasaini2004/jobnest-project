@@ -22,6 +22,7 @@ interface JobCardProps {
   description: string;
   skills: string[];
   featured?: boolean;
+  postedById: string; // <-- add this line
 }
 
 const JobCard = ({ 
@@ -34,7 +35,8 @@ const JobCard = ({
   posted, 
   description, 
   skills, 
-  featured = false 
+  featured = false,
+  postedById // <-- add this line
 }: JobCardProps) => {
   const { saveJob, removeJob, isJobSaved } = useSavedJobs();
   const [saved, setSaved] = useState(isJobSaved(id));
@@ -90,7 +92,8 @@ const JobCard = ({
         posted,
         description,
         skills,
-        featured
+        featured,
+        postedById, // <-- add this line
       });
       setSaved(true);
       toast({

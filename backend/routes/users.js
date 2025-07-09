@@ -1,7 +1,8 @@
-const express = require("express");
+import express from "express";
+import Employer from "../models/employer.js";
+import JobSeeker from "../models/jobSeeker.js";
+
 const router = express.Router();
-const Employer = require("../models/employer");
-const JobSeeker = require("../models/jobSeeker");
 
 // Get employer profile by ID
 router.get("/employer/:id", async (req, res) => {
@@ -99,4 +100,4 @@ router.post('/onboarding', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

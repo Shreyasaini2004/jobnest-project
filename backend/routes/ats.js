@@ -1,14 +1,14 @@
-const express = require('express');
-const multer = require('multer');
-const fs = require('fs');
-const path = require('path');
-const rateLimit = require('express-rate-limit');
-const axios = require('axios');
-const SavedAnalysis = require('../models/savedAnalysis');
-const auth = require('../middleware/auth');
-const nodemailer = require('nodemailer');
-const PDFDocument = require('pdfkit');
-// const { verifyCaptcha } = require('../middleware/captcha'); // Stub for CAPTCHA
+import express from 'express';
+import multer from 'multer';
+import fs from 'fs';
+import path from 'path';
+import rateLimit from 'express-rate-limit';
+import axios from 'axios';
+import SavedAnalysis from '../models/savedAnalysis.js';
+import auth from '../middleware/auth.js';
+import nodemailer from 'nodemailer';
+import PDFDocument from 'pdfkit';
+// import { verifyCaptcha } from '../middleware/captcha'; // Stub for CAPTCHA
 
 const router = express.Router();
 
@@ -316,4 +316,4 @@ router.post('/chatbot', limiter, async (req, res) => {
     res.status(500).json({ error: 'Chatbot error: ' + err.message, privacy: privacyDisclaimer });
   }
 });
-module.exports = router;
+export default router;
