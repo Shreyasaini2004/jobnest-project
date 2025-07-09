@@ -8,6 +8,7 @@ import fs from "fs";
 import { fileURLToPath } from "url";
 import { dirname } from 'path';
 import cloudinary from "../config/cloudinary.js";
+import { sendWelcomeEmail } from "../services/emailService.js";
 
 // Import models
 import Employer from "../models/employer.js";
@@ -110,7 +111,7 @@ router.post("/employer/signup", async (req, res) => {
         createdAt: employer.createdAt
       }
     });
-
+    await sendWelcomeEmail(employer.email, `${employer.firstName} ${employer.lastName}`);
   } catch (err) {
     console.error("Signup error:", err);
     res.status(500).json({ error: "Signup failed" });
@@ -180,23 +181,23 @@ router.post("/employer/login", async (req, res) => {
 // ---------------------------------------------------
 router.post("/jobseeker/signup", async (req, res) => {
   const { firstName, lastName, email, password, confirmPassword } = req.body;
-
+  
   if (!firstName || !lastName || !email || !password || !confirmPassword) {
     return res.status(400).json({ error: "All fields are required" });
   }
-
+  
   if (password !== confirmPassword) {
     return res.status(400).json({ error: "Passwords do not match" });
   }
-
+  
   try {
     const existingUser = await JobSeeker.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ error: "Email already registered" });
     }
-
+    
     const hashedPassword = await bcrypt.hash(password, 10);
-
+    
     const newJobSeeker = new JobSeeker({
       firstName,
       lastName,
@@ -231,7 +232,7 @@ router.post("/jobseeker/signup", async (req, res) => {
         createdAt: newJobSeeker.createdAt
       }
     });
-
+  await sendWelcomeEmail(newJobSeeker.email, `${newJobSeeker.firstName} ${newJobSeeker.lastName}`);
   } catch (err) {
     console.error("Signup Error:", err);
     res.status(500).json({ error: "Internal server error" });
@@ -243,19 +244,18 @@ router.post("/jobseeker/signup", async (req, res) => {
 // ✅ Job Seeker Login
 // ---------------------------------------------------
 router.post("/jobseeker/login", async (req, res) => {
+  const { email, password } = req.body;
+  
+  try {
+    const jobSeeker = await JobSeeker.findOne({ email });
+    if (!jobSeeker) {
+      return res.status(400).json({ error: "Invalid email or password" });
+    }
 
-    const { email, password } = req.body;
-  
-    try {
-      const jobSeeker = await JobSeeker.findOne({ email });
-      if (!jobSeeker) {
-        return res.status(400).json({ error: "Invalid email or password" });
-      }
-  
-      const isMatch = await bcrypt.compare(password, jobSeeker.password);
-      if (!isMatch) {
-        return res.status(400).json({ error: "Invalid email or password" });
-      }
+    const isMatch = await bcrypt.compare(password, jobSeeker.password);
+    if (!isMatch) {
+      return res.status(400).json({ error: "Invalid email or password" });
+    }
 
       // Create JWT
       const token = jwt.sign(

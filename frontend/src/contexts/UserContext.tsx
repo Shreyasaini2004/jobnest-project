@@ -1,7 +1,25 @@
+// src/contexts/UserContext.tsx
 import { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { userApi } from '@/lib/userApi';
-import { User } from '@/types/user';
 import axios from '@/lib/axios';
+
+interface User {
+  _id: string;
+  name: string;
+  email: string;
+  userType: "job-seeker" | "employer";
+  createdAt?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  location?: string;
+  experience?: string;
+  education?: string;
+  skills?: string;
+  bio?: string;
+  avatar?: string;
+  embedding?: number[];
+}
 
 interface UserContextType {
   user: User | null;
@@ -13,7 +31,7 @@ interface UserContextType {
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
-export function UserProvider({ children }: { children: ReactNode }) {
+export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUserState] = useState<User | null>(() => {
     try {
       const savedUser = localStorage.getItem('user');
@@ -27,15 +45,15 @@ export function UserProvider({ children }: { children: ReactNode }) {
   });
   
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  
 
-  const setUser = (userData: User) => {
-    try {
-      localStorage.setItem('user', JSON.stringify(userData));
-      setUserState(userData);
-    } catch (error) {
-      console.error("Failed to save user to localStorage:", error);
-    }
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) setUserState(JSON.parse(storedUser));
+  }, []);
+
+  const setUser = (user: User) => {
+    setUserState(user);
+    localStorage.setItem("user", JSON.stringify(user));
   };
 
   const logout = async () => {
@@ -51,6 +69,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       console.error("Failed to logout:", error);
     }
     setUserState(null);
+    localStorage.removeItem("user");
   };
 
   // Function to refresh user data from the backend
@@ -82,15 +101,15 @@ export function UserProvider({ children }: { children: ReactNode }) {
       {children}
     </UserContext.Provider>
   );
-}
+};
 
-export function useUser() {
+export const useUser = () => {
   const context = useContext(UserContext);
-  if (context === undefined) {
-    throw new Error('useUser must be used within a UserProvider');
+  if (!context) {
+    throw new Error("useUser must be used within a UserProvider");
   }
   return context;
-}
+};
 
 export function logout() {
   // Use the context if available
@@ -108,97 +127,5 @@ export function logout() {
   }
 }
 
-
-// src/contexts/UserContext.tsx (UPDATED)
-// import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-
-// // Define the shape of your user object. Add any other fields you need.
-// interface User {
-//   _id: string;
-//   email: string;
-//   role: 'employer' | 'jobseeker';
-//   companyName?: string;
-//   firstName?: string;
-// }
-
-// // Define the context type
-// interface UserContextType {
-//   user: User | null;
-//   token: string | null;
-//   setUser: (user: User | null) => void; // Kept for compatibility if needed elsewhere
-//   login: (userData: User, token: string) => void;
-//   logout: () => void;
-//   isLoading: boolean;
-// }
-
-// // Create the context
-// const UserContext = createContext<UserContextType | undefined>(undefined);
-
-// // Create the provider component
-// export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-//   const [user, setUserState] = useState<User | null>(null);
-//   const [token, setToken] = useState<string | null>(null);
-//   const [isLoading, setIsLoading] = useState(true);
-
-//   // On initial app load, check localStorage for existing session
-//   useEffect(() => {
-//     try {
-//       const storedToken = localStorage.getItem('token');
-//       const storedUser = localStorage.getItem('user');
-
-//       if (storedToken && storedUser) {
-//         setToken(storedToken);
-//         setUserState(JSON.parse(storedUser));
-//       }
-//     } catch (error) {
-//       console.error("Failed to initialize user state from localStorage", error);
-//     } finally {
-//       setIsLoading(false); // We are done loading
-//     }
-//   }, []);
-
-//   // Login function
-//   const login = (userData: User, authToken: string) => {
-//     setUserState(userData);
-//     setToken(authToken);
-//     localStorage.setItem('user', JSON.stringify(userData));
-//     localStorage.setItem('token', authToken);
-//   };
-
-//   // Logout function
-//   const logout = () => {
-//     setUserState(null);
-//     setToken(null);
-//     localStorage.removeItem('user');
-//     localStorage.removeItem('token');
-//     // For a clean logout, redirect to the login page
-//     window.location.href = '/login'; 
-//   };
-  
-//   // Backward compatibility for existing setUser calls
-//   const setUser = (user: User | null) => {
-//     setUserState(user);
-//     if(user) {
-//         localStorage.setItem('user', JSON.stringify(user));
-//     } else {
-//         localStorage.removeItem('user');
-//     }
-//   }
-
-//   const contextValue = { user, token, setUser, login, logout, isLoading };
-
-//   return (
-//     <UserContext.Provider value={contextValue}>
-//       {!isLoading && children}
-//     </UserContext.Provider>
-//   );
-// };
-
-// // Custom hook for easy access
-// export const useUser = () => {
-//   const context = useContext(UserContext);
-//   if (!context) {
-//     throw new Error('useUser must be used within a UserProvider');
-//   }
-//   return context;
-// };
+export { UserContext };
+export default UserContext;

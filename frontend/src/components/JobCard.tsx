@@ -23,10 +23,10 @@ interface JobCardProps {
   description: string;
   skills: string[];
   featured?: boolean;
-  postedById: string; // <-- add this line
+  postedById: string; // Required for job application
 }
 
-const JobCard = ({ 
+const JobCard = ({
   id,
   title, 
   company, 
@@ -37,7 +37,7 @@ const JobCard = ({
   description, 
   skills, 
   featured = false,
-  postedById // <-- add this line
+  postedById
 }: JobCardProps) => {
   const { saveJob, removeJob, isJobSaved } = useSavedJobs();
   const [saved, setSaved] = useState(isJobSaved(id));
@@ -94,7 +94,7 @@ const JobCard = ({
         description,
         skills,
         featured,
-        postedById, // <-- add this line
+        postedById
       });
       setSaved(true);
       toast({
@@ -105,7 +105,7 @@ const JobCard = ({
     }
   };
 
-  const handleApply = async () => {
+  const handleApply = () => {
     if (!user) {
       toast({
         title: "Sign In Required",
@@ -131,55 +131,14 @@ const JobCard = ({
       return;
     }
 
-    setIsApplying(true);
-    
-    try {
-      // Create a basic application object
-      const application = {
-        jobSeekerId: user._id,
-        coverLetter: "", // This would typically come from a form
-        resumeUrl: "" // This would typically come from a form or user profile
-      };
-      
-      const success = await jobApi.applyForJob(id, application);
-      
-      if (success) {
-        setHasApplied(true);
-        
-        // Also update localStorage for UI consistency
-        const appliedJobs = JSON.parse(localStorage.getItem('appliedJobs') || '[]');
-        if (!appliedJobs.includes(id)) {
-          appliedJobs.push(id);
-          localStorage.setItem('appliedJobs', JSON.stringify(appliedJobs));
-        }
-        
-        toast({
-          title: "Application Submitted!",
-          description: `Your application for ${title} at ${company} has been submitted successfully.`,
-          variant: "default",
-        });
-        
-        // Navigate to job details after a short delay
-        setTimeout(() => {
-          navigate(`/jobs/${id}`);
-        }, 1000);
-      } else {
-        toast({
-          title: "Application Failed",
-          description: "There was an error submitting your application. Please try again.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error("Error applying for job:", error);
-      toast({
-        title: "Application Error",
-        description: "An unexpected error occurred. Please try again later.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsApplying(false);
-    }
+    // Navigate to the application form with job details
+    navigate(`/apply/${id}`, {
+      state: {
+        jobTitle: title,
+        companyName: company,
+        postedBy: postedById,
+      },
+    });
   };
 
   return (

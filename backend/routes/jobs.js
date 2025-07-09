@@ -2,6 +2,8 @@ import express from "express";
 import mongoose from "mongoose";
 import { generateEmbedding } from "../config/geminiClient.js";
 import Job from "../models/job.js";
+import JobSeeker from "../models/jobSeeker.js";
+import { sendJobAlertEmail } from "../services/emailService.js";
 
 const router = express.Router();
 
@@ -13,7 +15,10 @@ router.get('/', async (req, res) => {
   if (!recruiterId) return res.status(400).json({ error: "Missing recruiterId" });
 
   try {
-    const jobs = await Job.find({ postedBy: recruiterId }).select("jobTitle");
+    const jobs = await Job.find({ postedBy: recruiterId })
+      .populate('postedBy', 'companyName') // ✅ Add this
+      .select('jobTitle postedBy'); // ✅ Select postedBy too
+
     res.status(200).json(jobs);
   } catch (err) {
     console.error("❌ Error fetching jobs by recruiter:", err.message);
@@ -24,6 +29,7 @@ router.get('/', async (req, res) => {
 // ----------------------------
 // ✅ POST /api/jobs/create
 // ----------------------------
+
 router.post("/create", async (req, res) => {
   console.log("📥 Incoming job:", req.body);
 
@@ -50,6 +56,28 @@ router.post("/create", async (req, res) => {
     const savedJob = await newJob.save();
 
     console.log("✅ Job saved:", savedJob);
+
+    // ----------------------------------------
+    // 📡 Notify relevant users by email
+    // ----------------------------------------
+    const users = await JobSeeker.find({
+      embedding: { $exists: true, $not: { $size: 0 } }
+    }).lean();
+
+    const cosineSimilarity = (vecA, vecB) => {
+      const dot = vecA.reduce((sum, a, i) => sum + a * vecB[i], 0);
+      const magA = Math.sqrt(vecA.reduce((sum, a) => sum + a * a, 0));
+      const magB = Math.sqrt(vecB.reduce((sum, b) => sum + b * b, 0));
+      if (magA === 0 || magB === 0) return 0;
+      return dot / (magA * magB);
+    };
+
+    for (const user of users) {
+      const similarity = cosineSimilarity(user.embedding, embedding);
+      if (similarity >= 0.7) {
+        await sendJobAlertEmail(user.email, user.firstName, savedJob);
+      }
+    }
 
     res.status(201).json(savedJob);
   } catch (err) {

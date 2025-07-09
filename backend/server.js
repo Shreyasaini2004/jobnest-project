@@ -1,7 +1,9 @@
+// server.js
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import path from 'path';
+import fs from 'fs';
 import cookieParser from 'cookie-parser';
 import http from 'http';
 import { Server } from 'socket.io';
@@ -23,6 +25,11 @@ import eventsRoutes from './routes/events.js';
 import usersRoutes from './routes/users.js';
 import atsRoutes from './routes/ats.js';
 import applicationsRoutes from './routes/applications.js';
+import userRoutes from './routes/userRoutes.js';
+import embeddingRoutes from './routes/embedding.js';
+import recommendationRoutes from './routes/recommendations.js';
+import jobSeekerRoutes from './routes/jobSeekerRoutes.js';
+import testEmailRoutes from './routes/testEmail.js';
 
 // ===================================
 // INITIALIZE APP & UNIFIED SERVER
@@ -98,12 +105,18 @@ io.on('connection', (socket) => {
   });
 });
 
+// API Routes
 app.use('/api/auth', authRoutes);
-app.use("/api/jobs", jobRoutes);
+app.use('/api/auth/users', userRoutes);
+app.use('/api/jobs', jobRoutes);
 app.use('/api/events', eventsRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/ats', atsRoutes);
 app.use('/api/applications', applicationsRoutes);
+app.use('/api/embedding', embeddingRoutes);
+app.use('/api/recommendations', recommendationRoutes);
+app.use('/api', jobSeekerRoutes);
+app.use('/api', testEmailRoutes);
 
 // ✅ Add this route for frontend testing
 app.get('/api/hello', (req, res) => {
@@ -121,4 +134,4 @@ mongoose.connect(process.env.MONGO_URI)
       console.log(`🚀 Unified Server (API & Sockets) running at http://localhost:${PORT}`);
     });
   })
-  .catch((err) => console.error('MongoDB connection error:', err));
+  .catch((err) => console.error('❌ MongoDB connection error:', err));

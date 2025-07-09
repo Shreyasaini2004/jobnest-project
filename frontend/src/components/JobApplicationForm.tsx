@@ -80,21 +80,33 @@ const JobApplicationForm: React.FC<JobApplicationFormProps> = ({
       // Add the job seeker ID to the application data
       const applicationData = {
         ...data.application,
-        jobSeekerId: user._id
+        jobSeekerId: user._id,
+        postedBy: data.postedBy
       };
       
-      // Call the real API
-      const success = await jobApi.applyForJob(data.jobId, applicationData);
+      console.log("📨 Final submit payload:", {
+        jobId: data.jobId,
+        ...applicationData
+      });
       
-      if (success) {
-        toast({
-          title: 'Application Submitted',
-          description: 'Your application has been submitted successfully!',
-        });
-        if (onSuccess) onSuccess();
-      } else {
-        throw new Error('Application submission failed');
-      }
+      // Call the API
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/applications`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jobId: data.jobId,
+          ...applicationData
+        }),
+      });
+
+      if (!res.ok) throw new Error('Failed to submit application');
+
+      toast({
+        title: 'Application Submitted',
+        description: 'Your application has been submitted successfully!',
+      });
+
+      if (onSuccess) onSuccess();
     } catch (error) {
       console.error('Error applying for job:', error);
       toast({

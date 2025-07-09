@@ -155,9 +155,25 @@ const ViewOpenings = () => {
 
   // Client-side filtering for immediate feedback (optional)
   const filteredJobs = useMemo(() => {
-    if (isSearching) return jobs; // Don't filter while searching
-    return jobs;
-  }, [jobs, isSearching]);
+    // If we're already searching on the server, don't filter client-side
+    if (isSearching) return jobs;
+    
+    // Otherwise, provide immediate feedback with client-side filtering
+    return jobs.filter(job => {
+      const matchesSearch = searchTerm ? (
+        job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        job.company.toLowerCase().includes(searchTerm.toLowerCase())
+      ) : true;
+
+      const matchesType = filterType !== 'all' ?
+        job.type.toLowerCase() === filterType.toLowerCase() : true;
+
+      const matchesLocation = filterLocation !== 'all' ?
+        (job.location || '').toLowerCase().includes(filterLocation.toLowerCase()) : true;
+
+      return matchesSearch && matchesType && matchesLocation;
+    });
+  }, [jobs, searchTerm, filterType, filterLocation, isSearching]);
 
   const handleRetry = () => {
     setError(null);

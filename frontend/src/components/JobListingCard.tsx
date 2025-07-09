@@ -8,12 +8,35 @@ import { Job } from "@/contexts/SavedJobsContext";
 import { useNavigate } from "react-router-dom";
 
 interface JobListingCardProps {
-  job: Job;
+  job: Job & { postedById?: string }; // Include postedById for job application
+  isExpanded?: boolean;
+  onToggleDetails?: () => void;
+  onApply?: () => void;
 }
 
-const JobListingCard = ({ job }: JobListingCardProps) => {
+const JobListingCard = ({ 
+  job, 
+  isExpanded = false,
+  onToggleDetails = () => {},
+  onApply
+}: JobListingCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const navigate = useNavigate();
+
+  const handleApply = () => {
+    if (!job.postedById) {
+      console.error("⚠️ Missing postedById in job:", job);
+      return;
+    }
+
+    navigate(`/apply/${job.id}`, {
+      state: {
+        jobTitle: job.title,
+        companyName: job.company,
+        postedBy: job.postedById, // ✅ crucial fix
+      },
+    });
+  };
 
   return (
     <Card 
@@ -65,10 +88,21 @@ const JobListingCard = ({ job }: JobListingCardProps) => {
           {job.description}
         </p>
         
+        {isExpanded && (
+          <div className="pt-2">
+            <h4 className="text-sm font-semibold mb-1 text-foreground">Required Skills:</h4>
+            <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+              {job.skills.map((skill) => (
+                <li key={skill}>{skill}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         <div className="flex gap-2 pt-2 transition-all duration-500 transform group-hover:translate-y-0.5">
           <Button 
             className="flex-1 bg-job-primary hover:bg-job-primary/90 text-white transition-all duration-300 hover:shadow-lg hover:shadow-job-primary/20 hover:-translate-y-0.5 group-hover:scale-[1.02]"
-            onClick={() => navigate(`/jobs/${job.id}`)}
+            onClick={onApply || handleApply}
           >
             Apply Now
           </Button>
