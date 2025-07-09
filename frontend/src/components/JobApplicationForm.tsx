@@ -157,114 +157,116 @@ const JobApplicationForm: React.FC<JobApplicationFormProps> = ({
           </p>
         </div>
 
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <CardContent className="space-y-4">
-            <FormField
-              name="coverLetter"
-              label="Cover Letter"
-              type="textarea"
-              placeholder="Introduce yourself and explain why you're a good fit for this position..."
-              rows={6}
-              required
-            />
+        <FormProvider {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <CardContent className="space-y-4">
+              <FormField
+                name="coverLetter"
+                label="Cover Letter"
+                type="textarea"
+                placeholder="Introduce yourself and explain why you're a good fit for this position..."
+                rows={6}
+                required
+              />
             
-            <FormField
-              name="resumeUrl"
-              label="Resume URL"
-              type="url"
-              placeholder="https://example.com/my-resume.pdf"
-              description="Link to your resume (Google Drive, Dropbox, etc.)"
-            />
+              <FormField
+                name="resumeUrl"
+                label="Resume URL"
+                type="url"
+                placeholder="https://example.com/my-resume.pdf"
+                description="Link to your resume (Google Drive, Dropbox, etc.)"
+              />
             
-            <FormField
-              name="portfolioUrl"
-              label="Portfolio URL"
-              type="url"
-              placeholder="https://myportfolio.com"
-              description="Link to your portfolio or personal website"
-            />
+              <FormField
+                name="portfolioUrl"
+                label="Portfolio URL"
+                type="url"
+                placeholder="https://myportfolio.com"
+                description="Link to your portfolio or personal website"
+              />
             
-            <FormField
-              name="experience"
-              label="Experience"
-              type="text"
-              placeholder="e.g. 3 years in frontend development"
-              required
-            />
+              <FormField
+                name="experience"
+                label="Experience"
+                type="text"
+                placeholder="e.g. 3 years in frontend development"
+                required
+              />
             
-            <FormField
-              name="location"
-              label="Location"
-              type="text"
-              placeholder="e.g. San Francisco, CA"
-              required
-            />
+              <FormField
+                name="location"
+                label="Location"
+                type="text"
+                placeholder="e.g. San Francisco, CA"
+                required
+              />
             
-            <FormField
-              name="education"
-              label="Education"
-              type="text"
-              placeholder="e.g. B.Sc. in Computer Science, Stanford University"
-              required
-            />
+              <FormField
+                name="education"
+                label="Education"
+                type="text"
+                placeholder="e.g. B.Sc. in Computer Science, Stanford University"
+                required
+              />
             
-            {/* ATS Score Display */}
-            <div className="flex items-center justify-between border p-3 rounded-md">
-              <div>
-                <h3 className="font-medium">ATS Resume Score</h3>
-                <p className="text-sm text-gray-500">Analyze how well your resume matches this job</p>
+              {/* ATS Score Display */}
+              <div className="flex items-center justify-between border p-3 rounded-md">
+                <div>
+                  <h3 className="font-medium">ATS Resume Score</h3>
+                  <p className="text-sm text-gray-500">Analyze how well your resume matches this job</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {atsScore !== null && (
+                    <Badge className={`${atsScore >= 80 ? 'bg-green-500' : atsScore >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`}>
+                      {atsScore}%
+                    </Badge>
+                  )}
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setShowATSAnalysis(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <FileText className="h-4 w-4" />
+                    {atsScore === null ? 'Analyze Resume' : 'Re-analyze'}
+                  </Button>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                {atsScore !== null && (
-                  <Badge className={`${atsScore >= 80 ? 'bg-green-500' : atsScore >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`}>
-                    {atsScore}%
-                  </Badge>
-                )}
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setShowATSAnalysis(true)}
-                  className="flex items-center gap-2"
-                >
-                  <FileText className="h-4 w-4" />
-                  {atsScore === null ? 'Analyze Resume' : 'Re-analyze'}
-                </Button>
-              </div>
-            </div>
 
-            <FormField
-              name="agreeToTerms"
-              type="checkbox"
-              checkboxLabel="I agree to the terms and conditions"
-              required
-            />
-          </CardContent>
-          
-          <CardFooter className="flex justify-between">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onCancel}
-              disabled={isLoading}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={isLoading || hasErrors}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Submitting...
-                </>
-              ) : (
-                'Submit Application'
-              )}
-            </Button>
-          </CardFooter>
-        </form>
+              <FormField
+                name="agreeToTerms"
+                type="checkbox"
+                checkboxLabel="I agree to the terms and conditions"
+                required
+              />
+            </CardContent>
+            
+            <CardFooter className="flex justify-between">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onCancel}
+                disabled={isLoading}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isLoading || hasErrors}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  'Submit Application'
+                )}
+              </Button>
+            </CardFooter>
+          </form>
+        </FormProvider>
 
         {/* ATS Analysis Dialog */}
         <Dialog open={showATSAnalysis} onOpenChange={setShowATSAnalysis}>

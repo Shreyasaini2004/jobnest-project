@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/contexts/UserContext";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { jobApi } from "@/lib/realApi";
+import BookmarkButton from './BookmarkButton';
 
 interface JobCardProps {
   id: string;
@@ -187,12 +188,17 @@ const JobCard = ({
       ref={cardRef}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={(e) => {
+        // Only navigate if the click is not on a button or link
+        if ((e.target as HTMLElement).closest('button, a')) return;
+        navigate(`/jobs/${id}`);
+      }}
     >
       {/* Decorative top bar */}
       <div className={`absolute top-0 left-0 w-full h-1 ${featured ? 'bg-gradient-to-r from-job-primary via-job-accent to-job-primary' : 'bg-gradient-to-r from-job-secondary/50 via-job-accent/30 to-job-secondary/50'} transition-all duration-500 ${isHovered ? 'h-2' : 'h-1'}`}></div>
       
       {/* Background gradient effect */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${featured ? 'from-job-secondary/20 to-background/80' : 'from-background/50 to-background'} transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-80'}`}></div>
+      <div className={`absolute inset-0 bg-gradient-to-br ${featured ? 'from-job-secondary/20 to-background/80' : 'from-background/50 to-background'} transition-opacity duration-300 z-0 ${isHovered ? 'opacity-100' : 'opacity-80'}`}></div>
       
       <CardContent className="p-6 relative z-10">
         <div className="flex justify-between items-start mb-4">
@@ -239,17 +245,19 @@ const JobCard = ({
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
           >
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className={`shrink-0 ${saved ? 'text-job-primary' : ''} transition-all duration-300 hover:bg-job-primary/10`}
-              onClick={handleBookmark}
-            >
-              {saved ? 
-                <BookmarkCheck className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" /> : 
-                <Bookmark className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" />
-              }
-            </Button>
+            <BookmarkButton job={{
+              id,
+              title,
+              company,
+              location: jobLocation,
+              salary,
+              type,
+              posted,
+              description,
+              skills,
+              featured,
+              postedById
+            }} />
           </motion.div>
         </div>
 

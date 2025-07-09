@@ -20,6 +20,9 @@ const __dirname = dirname(__filename);
 import authRoutes from './routes/auth.js';
 import jobRoutes from './routes/jobs.js';
 import eventsRoutes from './routes/events.js';
+import usersRoutes from './routes/users.js';
+import atsRoutes from './routes/ats.js';
+import applicationsRoutes from './routes/applications.js';
 
 // ===================================
 // INITIALIZE APP & UNIFIED SERVER
@@ -98,6 +101,9 @@ io.on('connection', (socket) => {
 app.use('/api/auth', authRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use('/api/events', eventsRoutes);
+app.use('/api/users', usersRoutes);
+app.use('/api/ats', atsRoutes);
+app.use('/api/applications', applicationsRoutes);
 
 // ✅ Add this route for frontend testing
 app.get('/api/hello', (req, res) => {

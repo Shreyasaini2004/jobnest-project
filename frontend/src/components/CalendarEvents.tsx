@@ -166,8 +166,8 @@ const CalendarEvents = () => {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {selectedDateEvents.map((event) => (
-                        <div key={event.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                      {selectedDateEvents.map((event, idx) => (
+                        <div key={event.id || idx} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
                           <div className="flex justify-between items-start mb-3">
                             <div className="flex items-center gap-3">
                               {getEventTypeIcon(event.type)}
@@ -217,22 +217,17 @@ const CalendarEvents = () => {
                   <CardTitle className="text-lg">Quick Stats</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Total Events</span>
-                    <span className="font-semibold">{events.length}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">This Week</span>
-                    <span className="font-semibold">{upcomingEvents.length}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Job Fairs</span>
-                    <span className="font-semibold">{events.filter(e => e.type === 'job-fair').length}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Webinars</span>
-                    <span className="font-semibold">{events.filter(e => e.type === 'webinar').length}</span>
-                  </div>
+                  {[
+                    { label: 'Total Events', value: events.length },
+                    { label: 'This Week', value: upcomingEvents.length },
+                    { label: 'Job Fairs', value: events.filter(e => e.type === 'job-fair').length },
+                    { label: 'Webinars', value: events.filter(e => e.type === 'webinar').length }
+                  ].map((stat, index) => (
+                    <div key={`stat-${index}`} className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">{stat.label}</span>
+                      <span className="font-semibold">{stat.value}</span>
+                    </div>
+                  ))}
                 </CardContent>
               </Card>
               {/* Upcoming Events */}
@@ -250,8 +245,8 @@ const CalendarEvents = () => {
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      {upcomingEvents.map((event) => (
-                        <div key={event.id} className="border-l-4 border-job-primary pl-3 py-2">
+                      {upcomingEvents.map((event, idx) => (
+                        <div key={event.id || idx} className="border-l-4 border-job-primary pl-3 py-2">
                           <div className="flex justify-between items-start">
                             <div>
                               <h4 className="font-medium text-sm line-clamp-1">{event.title}</h4>
@@ -333,8 +328,8 @@ const CalendarEvents = () => {
             <p className="text-slate-500">You have not created any events yet.</p>
           ) : (
             <div className="space-y-4">
-              {events.map((event) => (
-                <div key={event.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow flex flex-col md:flex-row md:items-center md:justify-between">
+              {events.map((event, idx) => (
+                <div key={event.id || idx} className="border rounded-lg p-4 hover:shadow-md transition-shadow flex flex-col md:flex-row md:items-center md:justify-between">
                   <div className="flex items-center gap-3">
                     {getEventTypeIcon(event.type)}
                     <div>

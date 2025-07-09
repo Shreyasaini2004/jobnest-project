@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Bookmark, BookmarkCheck } from "lucide-react";
 import { useSavedJobs } from "@/contexts/SavedJobsContext";
@@ -9,10 +10,15 @@ interface BookmarkButtonProps {
 }
 
 const BookmarkButton = ({ job }: BookmarkButtonProps) => {
-  const { saveJob, removeJob, isJobSaved } = useSavedJobs();
-  const saved = isJobSaved(job.id);
+  const { saveJob, removeJob, isJobSaved, savedJobs } = useSavedJobs();
+  const [saved, setSaved] = useState(isJobSaved(job.id));
 
-  const handleBookmark = () => {
+  useEffect(() => {
+    setSaved(isJobSaved(job.id));
+  }, [isJobSaved, job.id, savedJobs]);
+
+  const handleBookmark = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation(); // Prevent parent click
     if (saved) {
       removeJob(job.id);
     } else {
@@ -39,6 +45,7 @@ const BookmarkButton = ({ job }: BookmarkButtonProps) => {
             variant="ghost" 
             size="icon" 
             className="h-7 w-7 rounded-full hover:bg-job-primary/10 hover:text-job-primary"
+            style={{ pointerEvents: 'auto', cursor: 'pointer', zIndex: 1000 }}
             onClick={handleBookmark}
           >
             {saved ? (

@@ -8,7 +8,12 @@ import SavedAnalysis from '../models/savedAnalysis.js';
 import auth from '../middleware/auth.js';
 import nodemailer from 'nodemailer';
 import PDFDocument from 'pdfkit';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 // import { verifyCaptcha } from '../middleware/captcha'; // Stub for CAPTCHA
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const router = express.Router();
 
