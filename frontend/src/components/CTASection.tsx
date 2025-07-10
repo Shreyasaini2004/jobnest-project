@@ -1,11 +1,23 @@
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
-const CTASection = () => {
+const SUBSCRIBE_API_URL =
+  (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development')
+    ? '/api/users/subscribe'
+    : 'https://jobnest-project.onrender.com/api/users/subscribe';
+
+const CTASection: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [email, setEmail] = useState('');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [message, setMessage] = useState('');
+
+  const validateEmail = (email: string) =>
+    /^\S+@\S+\.\S+$/.test(email);
 
   const handleGetStarted = () => {
     navigate('/register?type=job-seeker');
@@ -21,6 +33,35 @@ const CTASection = () => {
       description: "Premium features are coming soon! Stay tuned for advanced AI-powered job matching and career tools.",
       variant: "default",
     });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateEmail(email)) {
+      setMessage('Please enter a valid email address.');
+      setStatus('error');
+      return;
+    }
+    setStatus('loading');
+    setMessage('');
+    try {
+      const res = await fetch(SUBSCRIBE_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      if (res.ok) {
+        setStatus('success');
+        setMessage('Subscribed! Check your email for confirmation.');
+        setEmail('');
+      } else {
+        const data = await res.json();
+        throw new Error(data.error || 'Subscription failed.');
+      }
+    } catch (err: any) {
+      setStatus('error');
+      setMessage(err.message || 'Something went wrong. Please try again.');
+    }
   };
 
   return (

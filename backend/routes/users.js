@@ -1,6 +1,7 @@
 import express from "express";
 import Employer from "../models/employer.js";
 import JobSeeker from "../models/jobSeeker.js";
+import { sendWelcomeEmail } from '../services/emailService.js';
 
 const router = express.Router();
 
@@ -97,6 +98,21 @@ router.post('/onboarding', async (req, res) => {
   } catch (err) {
     console.error('Error saving onboarding data:', err);
     res.status(500).json({ error: 'Failed to save onboarding data' });
+  }
+});
+
+// POST /api/users/subscribe
+router.post('/subscribe', async (req, res) => {
+  const { email } = req.body;
+  if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+    return res.status(400).json({ error: 'Invalid email address.' });
+  }
+  try {
+    // You can customize the welcome message for subscription
+    await sendWelcomeEmail(email, 'JobSeeker');
+    res.json({ success: true, message: 'Subscription successful! Check your email.' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to send subscription email.' });
   }
 });
 
