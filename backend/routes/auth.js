@@ -147,7 +147,7 @@ router.post("/employer/login", async (req, res) => {
       // Set HTTP-only cookie
       res.cookie('token', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: true,
         sameSite: 'none',
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       });
@@ -217,7 +217,7 @@ router.post("/jobseeker/signup", async (req, res) => {
     // Set HTTP-only cookie
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: true,
       sameSite: 'none',
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
@@ -267,7 +267,7 @@ router.post("/jobseeker/login", async (req, res) => {
       // Set HTTP-only cookie
       res.cookie('token', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: true,
         sameSite: 'none',
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       });
@@ -361,7 +361,7 @@ router.post('/users/upload-avatar', upload.single('avatar'), async (req, res) =>
 router.post("/employer/logout", (req, res) => {
   res.clearCookie('token', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: true,
     sameSite: 'none',
   });
   res.json({ message: 'Logged out successfully' });
@@ -371,7 +371,7 @@ router.post("/employer/logout", (req, res) => {
 router.post("/jobseeker/logout", (req, res) => {
   res.clearCookie('token', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: true,
     sameSite: 'none',
   });
   res.json({ message: 'Logged out successfully' });
