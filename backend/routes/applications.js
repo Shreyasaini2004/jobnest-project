@@ -59,47 +59,96 @@ router.post('/apply', async (req, res) => {
   }
 });
 
-// New route for ApplicationForm model
+// New route for ApplicationForm model and JobSeeker model (accepts both payloads)
 router.post('/', async (req, res) => {
   try {
-    const {
-      jobId,
-      postedBy,
-      name,
-      phoneNumber,
-      email,
-      coverLetter,
-      resumeUrl,
-      githubLinkedinUrl,
-    } = req.body;
+    // If jobSeekerId is present, treat as JobSeeker application
+    if (req.body.jobSeekerId) {
+      const { jobId, jobSeekerId, coverLetter, resumeUrl, experience, location, education, resumeScore } = req.body;
 
-    // Validate required fields
-    if (!jobId || !postedBy || !name || !phoneNumber || !email || !coverLetter || !resumeUrl) {
-      console.error("Missing required fields:", req.body);
-      return res.status(400).json({ error: "All required fields must be provided." });
+      // Validate IDs
+      if (!mongoose.Types.ObjectId.isValid(jobId) || !mongoose.Types.ObjectId.isValid(jobSeekerId)) {
+        return res.status(400).json({ error: 'Invalid job or job seeker ID format' });
+      }
+
+      // Check if job exists
+      const job = await Job.findById(jobId);
+      if (!job) {
+        return res.status(404).json({ error: 'Job not found' });
+      }
+
+      // Check if job seeker exists
+      const jobSeeker = await JobSeeker.findById(jobSeekerId);
+      if (!jobSeeker) {
+        return res.status(404).json({ error: 'Job seeker not found' });
+      }
+
+      // Check if already applied
+      const existingApplication = await Application.findOne({ job: jobId, jobSeeker: jobSeekerId });
+      if (existingApplication) {
+        return res.status(400).json({ error: 'You have already applied for this job' });
+      }
+
+      // Create new application
+      const application = new Application({
+        job: jobId,
+        jobSeeker: jobSeekerId,
+        coverLetter,
+        resumeUrl,
+        resumeScore,
+        experience,
+        location,
+        education
+      });
+
+      const savedApplication = await application.save();
+
+      return res.status(201).json({
+        message: 'Application submitted successfully',
+        application: savedApplication
+      });
     }
+    // Otherwise, treat as recruiter application (JobApplication model)
+    else {
+      const {
+        jobId,
+        postedBy,
+        name,
+        phoneNumber,
+        email,
+        coverLetter,
+        resumeUrl,
+        githubLinkedinUrl,
+      } = req.body;
 
-    // Confirm job exists
-    const job = await Job.findById(jobId);
-    if (!job) {
-      return res.status(404).json({ error: "Job not found" });
+      // Validate required fields
+      if (!jobId || !postedBy || !name || !phoneNumber || !email || !coverLetter || !resumeUrl) {
+        console.error("Missing required fields:", req.body);
+        return res.status(400).json({ error: "All required fields must be provided." });
+      }
+
+      // Confirm job exists
+      const job = await Job.findById(jobId);
+      if (!job) {
+        return res.status(404).json({ error: "Job not found" });
+      }
+
+      // Create application
+      const newApplication = new JobApplication({
+        job: jobId,
+        postedBy,
+        name,
+        phoneNumber,
+        email,
+        coverLetter,
+        resumeUrl,
+        githubLinkedinUrl
+      });
+
+      await newApplication.save();
+
+      return res.status(201).json({ message: "Application submitted successfully" });
     }
-
-    // Create application
-    const newApplication = new JobApplication({
-      job: jobId,
-      postedBy,
-      name,
-      phoneNumber,
-      email,
-      coverLetter,
-      resumeUrl,
-      githubLinkedinUrl
-    });
-
-    await newApplication.save();
-
-    res.status(201).json({ message: "Application submitted successfully" });
   } catch (err) {
     console.error("Error creating application:", err);
     res.status(500).json({ error: "Failed to submit application" });
