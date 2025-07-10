@@ -10,7 +10,7 @@ import JobCategories from "@/components/JobCategories";
 import FeaturedJobs from "@/components/FeaturedJobs";
 import TestimonialSection from "@/components/TestimonialSection";
 import StatisticsSection from "@/components/StatisticsSection";
-import CTASection from "@/components/CTASection";
+
 
 const Index = () => {
   // State to track which components are visible for animation
@@ -60,9 +60,6 @@ const Index = () => {
           <StatisticsSection />
         </div>
 
-        <div className={`transition-all duration-1000 ${componentsVisible[6] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-          <CTASection />
-        </div>
       </main>
       <Footer />
     </div>
