@@ -47,7 +47,7 @@ const io = new Server(server, {
 });
 
 app.use(cors({
-  origin: "https://jobnest-project-fork-pbpi697pb-tsinghalbe22s-projects.vercel.app/",
+  origin: "https://jobnest-project-fork-pbpi697pb-tsinghalbe22s-projects.vercel.app",
   credentials: true
 }));
 app.use(express.json());
