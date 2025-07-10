@@ -1,63 +1,97 @@
 import axios from 'axios';
+import { XMLParser } from 'fast-xml-parser';
 
-const NEWS_API_KEY = process.env.NEWS_API_KEY;
-const NEWS_API_ENDPOINT = 'https://newsapi.org/v2/everything';
-
-// Keywords for job seekers and employers
-const DEFAULT_KEYWORDS = [
-  'career advice',
-  'job search tips',
-  'resume writing',
-  'interview preparation',
-  'hiring trends',
-  'workplace culture',
-  'professional development',
-  'remote work',
-  'salary negotiation',
-  'job market trends'
+// Google News RSS feeds for career-related topics
+const RSS_FEEDS = [
+  'https://news.google.com/rss/search?q=career+advice&hl=en-US&gl=US&ceid=US:en',
+  'https://news.google.com/rss/search?q=job+search+tips&hl=en-US&gl=US&ceid=US:en',
+  'https://news.google.com/rss/search?q=resume+writing&hl=en-US&gl=US&ceid=US:en',
+  'https://news.google.com/rss/search?q=interview+preparation&hl=en-US&gl=US&ceid=US:en',
+  'https://news.google.com/rss/search?q=remote+work&hl=en-US&gl=US&ceid=US:en',
+  'https://news.google.com/rss/search?q=salary+negotiation&hl=en-US&gl=US&ceid=US:en'
 ];
 
-export async function fetchCareerBlogs(keywords = DEFAULT_KEYWORDS) {
-  const query = keywords.join(' OR ');
+const parser = new XMLParser({
+  ignoreAttributes: false,
+  attributeNamePrefix: "@_"
+});
+
+export async function fetchCareerBlogsFromRSS() {
   try {
-    const response = await axios.get(NEWS_API_ENDPOINT, {
-      params: {
-        q: query,
-        apiKey: NEWS_API_KEY,
-        language: 'en',
-        sortBy: 'publishedAt',
-        pageSize: 20,
-        // Get articles from the last 30 days
-        from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        // Exclude domains that might not be relevant
-        excludeDomains: 'reddit.com,facebook.com,twitter.com'
+    const allArticles = [];
+    
+    // Fetch from multiple RSS feeds
+    for (const feedUrl of RSS_FEEDS) {
+      try {
+        const response = await axios.get(feedUrl, {
+          timeout: 5000,
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+          }
+        });
+        
+        const result = parser.parse(response.data);
+        const items = result.rss?.channel?.item || [];
+        
+        // Transform RSS items to our format
+        const articles = items.map(item => ({
+          title: item.title || 'No Title',
+          description: item.description || item['content:encoded'] || 'No description available',
+          url: item.link || '#',
+          urlToImage: extractImageFromContent(item['content:encoded'] || item.description) || 
+                     'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400',
+          publishedAt: item.pubDate || new Date().toISOString(),
+          source: {
+            name: item.source?.name || 'Google News'
+          }
+        }));
+        
+        allArticles.push(...articles);
+      } catch (error) {
+        console.error(`Error fetching RSS feed ${feedUrl}:`, error.message);
       }
-    });
-    
-    if (response.data.status === 'ok') {
-      return response.data.articles.map(article => ({
-        title: article.title,
-        description: article.description,
-        url: article.url,
-        urlToImage: article.urlToImage,
-        publishedAt: article.publishedAt,
-        source: {
-          name: article.source?.name || 'Unknown Source'
-        }
-      }));
-    } else {
-      console.error('NewsAPI error:', response.data);
-      return [];
     }
-  } catch (error) {
-    console.error('Error fetching blogs from NewsAPI:', error.message);
     
-    // Fallback to mock data if API fails
+    // Remove duplicates based on title
+    const uniqueArticles = removeDuplicates(allArticles, 'title');
+    
+    // Sort by date (newest first)
+    uniqueArticles.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
+    
+    // Return top 20 articles
+    return uniqueArticles.slice(0, 20);
+    
+  } catch (error) {
+    console.error('Error fetching RSS feeds:', error.message);
     return getMockCareerArticles();
   }
 }
 
-// Fallback mock data for when API is unavailable
+function extractImageFromContent(content) {
+  if (!content) return null;
+  
+  // Try to extract image from HTML content
+  const imgMatch = content.match(/<img[^>]+src="([^"]+)"/i);
+  if (imgMatch) {
+    return imgMatch[1];
+  }
+  
+  return null;
+}
+
+function removeDuplicates(articles, key) {
+  const seen = new Set();
+  return articles.filter(article => {
+    const value = article[key];
+    if (seen.has(value)) {
+      return false;
+    }
+    seen.add(value);
+    return true;
+  });
+}
+
+// Fallback mock data
 function getMockCareerArticles() {
   return [
     {
