@@ -9,6 +9,7 @@ console.log('Backend URL configured as:', backendUrl);
 const axiosInstance = axios.create({
   baseURL: backendUrl,
   withCredentials: true,
+  timeout: 10000, // 10 second timeout
 });
 
 // Add request interceptor for debugging
@@ -26,9 +27,22 @@ axiosInstance.interceptors.response.use(
   },
   error => {
     console.error('Request failed:', error.message);
+    
+    // Check if it's a network error (API not available)
+    if (error.code === 'ERR_NETWORK' || error.message.includes('Network Error')) {
+      console.error('Network error - API server may not be running or accessible');
+      console.error('Current API URL:', backendUrl);
+    }
+    
     if (error.response) {
       console.error('Response status:', error.response.status);
       console.error('Response data:', error.response.data);
+      
+      // Check if response is HTML instead of JSON (common when API is not available)
+      if (error.response.headers['content-type']?.includes('text/html')) {
+        console.error('Received HTML instead of JSON - API endpoint may be incorrect or server not running');
+      }
+      
       if (error.response.status === 401) {
         // Global logout and redirect on session expiry
         if (typeof userLogout === 'function') userLogout();

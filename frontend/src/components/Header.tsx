@@ -133,9 +133,11 @@ const Header = () => {
                     <span>ATS Score Analysis</span>
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Globe className="mr-2 h-4 w-4 text-job-primary" />
-                  <span>Career Blog</span>
+                <DropdownMenuItem asChild>
+                  <Link to="/career-blog">
+                    <Globe className="mr-2 h-4 w-4 text-job-primary" />
+                    <span>Career Blog</span>
+                  </Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

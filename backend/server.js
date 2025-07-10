@@ -33,6 +33,7 @@ import recommendationRoutes from './routes/recommendations.js';
 import jobSeekerRoutes from './routes/jobSeekerRoutes.js';
 import testEmailRoutes from './routes/testEmail.js';
 import chatRoutes from './routes/chat.js';
+import blogsRoutes from './routes/blogs.js';
 
 // ===================================
 // INITIALIZE APP & UNIFIED SERVER
@@ -47,7 +48,13 @@ const io = new Server(server, {
 });
 
 app.use(cors({
-  origin: "https://jobnest-project-fork.vercel.app",
+  origin: [
+    "http://localhost:8080",
+    "http://localhost:3000", 
+    "http://localhost:5173",
+    "https://jobnest-project-fork.vercel.app",
+    "https://jobnest-project-fork-pbpi697pb-tsinghalbe22s-projects.vercel.app"
+  ],
   credentials: true
 }));
 app.use(express.json());
@@ -123,6 +130,7 @@ app.use('/api/recommendations', recommendationRoutes);
 app.use('/api', jobSeekerRoutes);
 app.use('/api', testEmailRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/blogs', blogsRoutes);
 
 // ✅ Add this route for frontend testing
 app.get('/api/hello', (req, res) => {

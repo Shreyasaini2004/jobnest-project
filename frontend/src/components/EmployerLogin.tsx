@@ -69,9 +69,19 @@ export function EmployerLogin() {
   
     } catch (error) {
       console.error("Login error:", error);
+      
+      // Check if it's a network error or API not available
+      let errorMessage = 'Something went wrong. Try again.';
+      
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        errorMessage = 'Unable to connect to the server. Please check your internet connection and try again.';
+      } else if (error instanceof SyntaxError && error.message.includes('Unexpected token')) {
+        errorMessage = 'Server is not responding correctly. Please try again later.';
+      }
+      
       toast({
         title: "Login Error",
-        description: "Something went wrong. Try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

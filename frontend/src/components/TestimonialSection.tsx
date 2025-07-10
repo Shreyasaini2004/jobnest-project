@@ -20,7 +20,7 @@ const testimonials: Testimonial[] = [
     name: "Sarah Johnson",
     role: "Software Engineer",
     company: "TechCorp",
-    avatar: "/avatars/sarah.jpg",
+    avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
     content: "JobNest's AI matching helped me find a role that perfectly aligned with my skills and career goals. I received 3 interview requests within my first week!",
     rating: 5,
     type: "job-seeker"
@@ -30,7 +30,7 @@ const testimonials: Testimonial[] = [
     name: "Michael Chen",
     role: "HR Director",
     company: "Innovate Inc",
-    avatar: "/avatars/michael.jpg",
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
     content: "As a hiring manager, JobNest has revolutionized our recruitment process. The quality of candidates and the speed at which we fill positions has improved dramatically.",
     rating: 5,
     type: "employer"
@@ -40,7 +40,7 @@ const testimonials: Testimonial[] = [
     name: "Emily Rodriguez",
     role: "Marketing Specialist",
     company: "BrandWave",
-    avatar: "/avatars/emily.jpg",
+    avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
     content: "The ATS Score Analysis feature was a game-changer for my job search. I optimized my resume based on the insights and landed my dream job within a month!",
     rating: 5,
     type: "job-seeker"
@@ -50,7 +50,7 @@ const testimonials: Testimonial[] = [
     name: "David Wilson",
     role: "Talent Acquisition",
     company: "Global Solutions",
-    avatar: "/avatars/david.jpg",
+    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
     content: "JobNest's employer dashboard provides incredible insights into our hiring pipeline. The analytics have helped us refine our job descriptions and improve candidate quality.",
     rating: 4,
     type: "employer"
@@ -60,7 +60,7 @@ const testimonials: Testimonial[] = [
     name: "Priya Patel",
     role: "UX Designer",
     company: "DesignHub",
-    avatar: "/avatars/priya.jpg",
+    avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face",
     content: "The job matching algorithm is surprisingly accurate! I was skeptical at first, but JobNest recommended positions that truly matched my experience and career aspirations.",
     rating: 5,
     type: "job-seeker"
@@ -70,7 +70,7 @@ const testimonials: Testimonial[] = [
     name: "James Thompson",
     role: "CEO",
     company: "StartupX",
-    avatar: "/avatars/james.jpg",
+    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face",
     content: "As a startup founder, finding the right talent is crucial. JobNest has been instrumental in helping us build our team with candidates who not only have the skills but also align with our company culture.",
     rating: 5,
     type: "employer"
