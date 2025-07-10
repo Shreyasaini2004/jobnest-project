@@ -132,7 +132,7 @@ const JobCard = ({
     }
 
     // Navigate to the application form with job details
-    navigate(`/apply/${id}`, {
+    navigate(`/jobs/${id}`, {
       state: {
         jobTitle: title,
         companyName: company,
