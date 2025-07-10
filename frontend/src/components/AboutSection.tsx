@@ -1,49 +1,62 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, MessageSquare, Shield, BarChart3, Users, Zap } from "lucide-react";
-import { useEffect, useState } from 'react';
+import {
+  Search,
+  MessageSquare,
+  Bot,
+  BarChart3,
+  Bell,
+  FileText,
+} from "lucide-react";
+import { useEffect, useState } from "react";
 
 const AboutSection = () => {
-  const [apiMessage, setApiMessage] = useState('');
+  const [apiMessage, setApiMessage] = useState("");
 
   useEffect(() => {
     const apiUrl = import.meta.env.VITE_API_URL;
     fetch(`${apiUrl}/api/hello`)
-      .then(res => res.json())
-      .then(data => setApiMessage(data.message))
-      .catch(() => setApiMessage('Could not connect to backend.'));
+      .then((res) => res.json())
+      .then((data) => setApiMessage(data.message))
+      .catch(() => setApiMessage("Could not connect to backend."));
   }, []);
 
   const features = [
     {
       icon: Search,
       title: "Intelligent Job Matching",
-      description: "AI-powered algorithms match candidates with the perfect job opportunities based on skills and preferences."
+      description:
+        "AI-powered algorithms match candidates with the perfect job opportunities based on skills and preferences.",
     },
     {
       icon: MessageSquare,
       title: "Real-time Messaging",
-      description: "Seamless communication between job seekers and recruiters with instant messaging capabilities."
+      description:
+        "Seamless communication between job seekers and recruiters with instant messaging capabilities.",
     },
     {
-      icon: Shield,
-      title: "Secure Payment Integration",
-      description: "Safe and secure payment processing for premium features and services."
+      icon: Bot,
+      title: "AI Chatbot Assistant",
+      description:
+        "24/7 virtual assistant to guide users through job applications, suggest openings, and answer common queries in real time.",
     },
     {
       icon: BarChart3,
       title: "Live Analytics Dashboard",
-      description: "Visual dashboards showing application progress, job statistics, and performance metrics."
+      description:
+        "Visual dashboards showing application progress, job statistics, and performance metrics.",
     },
     {
-      icon: Users,
-      title: "Company Branding",
-      description: "Comprehensive company profiles with branding options to attract top talent."
+      icon: Bell,
+      title: "Instant Notifications",
+      description:
+        "Get real-time alerts for new job postings, recruiter messages, application updates, and interview invitations.",
     },
     {
-      icon: Zap,
+      icon: FileText,
       title: "Resume Parsing",
-      description: "Advanced resume parsing technology that extracts and analyzes candidate information automatically."
-    }
+      description:
+        "Advanced resume parsing technology that extracts and analyzes candidate information automatically.",
+    },
   ];
 
   return (
@@ -51,15 +64,20 @@ const AboutSection = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-6">
-            What is 
-            <span className="bg-gradient-to-r from-job-primary to-job-accent bg-clip-text text-transparent"> JobNest</span>
+            What is{" "}
+            <span className="bg-gradient-to-r from-job-primary to-job-accent bg-clip-text text-transparent">
+              JobNest
+            </span>
             ?
           </h2>
           <p className="text-lg md:text-xl text-muted-foreground max-w-4xl mx-auto leading-relaxed">
-            Whether you're a job seeker searching for your next big opportunity or an employer looking to hire top talent, JobNest bridges the gap with powerful, modern tools.
+            Whether you're a job seeker searching for your next big opportunity
+            or an employer looking to hire top talent, JobNest bridges the gap
+            with powerful, modern tools.
           </p>
-          <p className="text-base text-bold md:text-lg text-muted-foreground max-w-3xl mx-auto mt-4 leading-relaxed">
-            Discover smarter hiring. Experience effortless job searching. Welcome to JobNest.
+          <p className="text-base font-semibold md:text-lg text-muted-foreground max-w-3xl mx-auto mt-4 leading-relaxed">
+            Discover smarter hiring. Experience effortless job searching.
+            Welcome to JobNest.
           </p>
         </div>
 
@@ -69,7 +87,10 @@ const AboutSection = () => {
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((feature, index) => (
-              <Card key={index} className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+              <Card
+                key={index}
+                className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
+              >
                 <CardContent className="p-6">
                   <div className="w-12 h-12 mb-4 rounded-xl bg-gradient-to-br from-job-primary to-job-accent flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                     <feature.icon className="h-6 w-6 text-white" />
@@ -85,8 +106,6 @@ const AboutSection = () => {
             ))}
           </div>
         </div>
-
-
       </div>
     </section>
   );
