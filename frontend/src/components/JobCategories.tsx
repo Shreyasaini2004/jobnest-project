@@ -107,16 +107,27 @@ const JobCategories = () => {
           animate={isVisible ? "visible" : "hidden"}
         >
           <motion.div variants={itemVariants} className="inline-block">
-            <div className="flex items-center gap-3 mb-4 justify-center">
-              <div className="relative">
-                <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-job-primary to-job-accent opacity-30 blur-sm animate-pulse"></div>
-                <Grid className="h-6 w-6 text-job-primary relative z-10" />
-              </div>
-              <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-job-primary to-job-accent bg-clip-text text-transparent">
-                Explore Jobs by Category
-              </h2>
-            </div>
-          </motion.div>
+  <div className="flex items-center gap-3 mb-6 justify-center">
+    <div className="relative flex-shrink-0">
+      <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-job-primary to-job-accent opacity-30 blur-sm animate-pulse"></div>
+      <Grid className="h-6 w-6 text-job-primary relative z-10" />
+    </div>
+    <h2
+      className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-job-primary to-job-accent bg-clip-text text-transparent"
+      style={{
+        lineHeight: '1.4',
+        paddingBottom: '0.25rem',
+        paddingTop: '0.25rem',
+        overflow: 'visible',
+        display: 'inline-block',
+      }}
+    >
+      Explore Jobs by Category
+    </h2>
+  </div>
+</motion.div>
+
+
           <motion.p 
             className="text-lg text-muted-foreground max-w-2xl mx-auto"
             variants={itemVariants}
