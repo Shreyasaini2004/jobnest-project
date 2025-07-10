@@ -207,7 +207,7 @@ const FeaturedJobs = () => {
           </div>
         ) : (
           <motion.div 
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 h-full"
             variants={containerVariants}
             initial="hidden"
             animate={isVisible ? "visible" : "hidden"}
@@ -219,7 +219,7 @@ const FeaturedJobs = () => {
                 custom={index}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 whileHover={{ y: -5, transition: { duration: 0.2 } }}
-                className="h-full"
+                className="h-full flex"
               >
                 <JobCard
                   id={job.id}

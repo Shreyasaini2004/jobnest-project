@@ -40,7 +40,7 @@ const JobListingCard = ({
 
   return (
     <Card 
-      className={`group overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 border-border/50 ${isHovered ? 'shadow-job-primary/10 border-job-primary/30' : 'shadow-lg'}`}
+      className={`group overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 border-border/50 ${isHovered ? 'shadow-job-primary/10 border-job-primary/30' : 'shadow-lg'} flex flex-col h-full min-h-[370px]`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -72,7 +72,7 @@ const JobListingCard = ({
         <p className="text-lg font-semibold text-job-primary relative z-10 transition-all duration-300 group-hover:translate-x-1">{job.company}</p>
       </CardHeader>
 
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 flex flex-col flex-1">
         <div className="space-y-2 text-sm text-muted-foreground transition-all duration-300 group-hover:translate-y-0.5">
           <div className="flex items-center">
             <MapPin className="h-4 w-4 mr-2 text-job-primary" />
@@ -84,7 +84,7 @@ const JobListingCard = ({
           </div>
         </div>
         
-        <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed transition-all duration-300 group-hover:text-foreground/80">
+        <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed transition-all duration-300 group-hover:text-foreground/80 flex-1">
           {job.description}
         </p>
         
@@ -99,7 +99,7 @@ const JobListingCard = ({
           </div>
         )}
 
-        <div className="flex gap-2 pt-2 transition-all duration-500 transform group-hover:translate-y-0.5">
+        <div className="flex gap-2 pt-2 mt-auto transition-all duration-500 transform group-hover:translate-y-0.5">
           <Button 
             className="flex-1 bg-job-primary hover:bg-job-primary/90 text-white transition-all duration-300 hover:shadow-lg hover:shadow-job-primary/20 hover:-translate-y-0.5 group-hover:scale-[1.02]"
             onClick={onApply || handleApply}

@@ -8,7 +8,27 @@ const RSS_FEEDS = [
   'https://news.google.com/rss/search?q=resume+writing&hl=en-US&gl=US&ceid=US:en',
   'https://news.google.com/rss/search?q=interview+preparation&hl=en-US&gl=US&ceid=US:en',
   'https://news.google.com/rss/search?q=remote+work&hl=en-US&gl=US&ceid=US:en',
-  'https://news.google.com/rss/search?q=salary+negotiation&hl=en-US&gl=US&ceid=US:en'
+  'https://news.google.com/rss/search?q=salary+negotiation&hl=en-US&gl=US&ceid=US:en',
+  'https://news.google.com/rss/search?q=jobs&hl=en-US&gl=US&ceid=US:en',
+  'https://news.google.com/rss/search?q=career&hl=en-US&gl=US&ceid=US:en',
+  'https://news.google.com/rss/search?q=employment&hl=en-US&gl=US&ceid=US:en',
+  'https://news.google.com/rss/search?q=workplace&hl=en-US&gl=US&ceid=US:en',
+  'https://news.google.com/rss/search?q=job+market&hl=en-US&gl=US&ceid=US:en',
+  'https://news.google.com/rss/search?q=job+openings&hl=en-US&gl=US&ceid=US:en',
+  'https://news.google.com/rss/search?q=professional+development&hl=en-US&gl=US&ceid=US:en',
+  'https://news.google.com/rss/search?q=career+change&hl=en-US&gl=US&ceid=US:en',
+  'https://news.google.com/rss/search?q=job+interview&hl=en-US&gl=US&ceid=US:en',
+  'https://news.google.com/rss/search?q=resume&hl=en-US&gl=US&ceid=US:en',
+  'https://news.google.com/rss/search?q=cover+letter&hl=en-US&gl=US&ceid=US:en',
+  'https://news.google.com/rss/search?q=skills&hl=en-US&gl=US&ceid=US:en',
+  'https://news.google.com/rss/search?q=work+from+home&hl=en-US&gl=US&ceid=US:en',
+  'https://news.google.com/rss/search?q=remote+jobs&hl=en-US&gl=US&ceid=US:en',
+  'https://news.google.com/rss/search?q=internships&hl=en-US&gl=US&ceid=US:en',
+  'https://news.google.com/rss/search?q=freelance&hl=en-US&gl=US&ceid=US:en',
+  'https://news.google.com/rss/search?q=gig+economy&hl=en-US&gl=US&ceid=US:en',
+  'https://news.google.com/rss/search?q=job+tips&hl=en-US&gl=US&ceid=US:en',
+  'https://news.google.com/rss/search?q=job+advice&hl=en-US&gl=US&ceid=US:en',
+  'https://news.google.com/rss/search?q=career+growth&hl=en-US&gl=US&ceid=US:en'
 ];
 
 const parser = new XMLParser({
@@ -34,17 +54,33 @@ export async function fetchCareerBlogsFromRSS() {
         const items = result.rss?.channel?.item || [];
         
         // Transform RSS items to our format
-        const articles = items.map(item => ({
-          title: item.title || 'No Title',
-          description: item.description || item['content:encoded'] || 'No description available',
-          url: item.link || '#',
-          urlToImage: extractImageFromContent(item['content:encoded'] || item.description) || 
-                     'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400',
-          publishedAt: item.pubDate || new Date().toISOString(),
-          source: {
-            name: item.source?.name || 'Google News'
+        const articles = items.map(item => {
+          // Try to extract image from media:content, enclosure, or image tags
+          let image = null;
+          if (item['media:content'] && item['media:content']['@_url']) {
+            image = item['media:content']['@_url'];
+          } else if (item.enclosure && item.enclosure['@_url']) {
+            image = item.enclosure['@_url'];
+          } else if (item.image && item.image.url) {
+            image = item.image.url;
+          } else {
+            image = extractImageFromContent(item['content:encoded'] || item.description);
           }
-        }));
+          if (!image) {
+            image = 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400';
+          }
+          return {
+            title: item.title || 'No Title',
+            description: item.description || item['content:encoded'] || 'No description available',
+            url: item.link || '#',
+            image,
+            urlToImage: image,
+            publishedAt: item.pubDate || new Date().toISOString(),
+            source: {
+              name: item.source?.name || 'Google News'
+            }
+          };
+        });
         
         allArticles.push(...articles);
       } catch (error) {
@@ -57,7 +93,11 @@ export async function fetchCareerBlogsFromRSS() {
     
     // Sort by date (newest first)
     uniqueArticles.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
-    
+
+    // Debug: Log the number of unique articles and their titles
+    console.log(`Fetched ${uniqueArticles.length} unique articles from RSS feeds:`);
+    uniqueArticles.forEach((a, i) => console.log(`${i + 1}. ${a.title}`));
+
     // Return top 20 articles
     return uniqueArticles.slice(0, 20);
     

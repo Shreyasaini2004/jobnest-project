@@ -6,6 +6,7 @@ interface Article {
   description: string;
   url: string;
   urlToImage?: string;
+  image?: string;
   publishedAt: string;
   source: { name: string };
 }
@@ -13,6 +14,11 @@ interface Article {
 const PAGE_SIZE = 8;
 const DEFAULT_IMAGE =
   'https://images.unsplash.com/photo-1515168833906-d2a3b82b302b?auto=format&fit=crop&w=600&q=80';
+
+const BLOGS_API_URL =
+  (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development')
+    ? 'http://localhost:5000/api/blogs'
+    : 'https://jobnest-project.onrender.com/api/blogs';
 
 function stripHtml(html: string): string {
   if (!html) return '';
@@ -58,7 +64,7 @@ const CareerBlog: React.FC = () => {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch('https://jobnest-project.onrender.com/api/blogs');
+        const res = await fetch(BLOGS_API_URL);
         const data = await res.json();
         setArticles(data.articles || []);
       } catch (err) {
@@ -142,7 +148,7 @@ const CareerBlog: React.FC = () => {
               }}
             >
               <img
-                src={article.urlToImage || DEFAULT_IMAGE}
+                src={article.image || article.urlToImage || DEFAULT_IMAGE}
                 alt={article.title}
                 style={{
                   width: '100%',

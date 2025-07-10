@@ -143,7 +143,7 @@ const JobCard = ({
 
   return (
     <Card 
-      className={`group hover:shadow-lg transition-all duration-300 cursor-pointer relative overflow-hidden ${featured ? 'border-job-primary' : ''}`}
+      className={`group hover:shadow-lg transition-all duration-300 cursor-pointer relative overflow-hidden flex flex-col h-full min-h-[370px]`}
       ref={cardRef}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -159,7 +159,7 @@ const JobCard = ({
       {/* Background gradient effect */}
       <div className={`absolute inset-0 bg-gradient-to-br ${featured ? 'from-job-secondary/20 to-background/80' : 'from-background/50 to-background'} transition-opacity duration-300 z-0 ${isHovered ? 'opacity-100' : 'opacity-80'}`}></div>
       
-      <CardContent className="p-6 relative z-10">
+      <CardContent className="p-6 relative z-10 flex flex-col flex-1">
         <div className="flex justify-between items-start mb-4">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
@@ -245,9 +245,10 @@ const JobCard = ({
         </div>
 
         <motion.p 
-          className="text-muted-foreground text-sm mb-4 line-clamp-2 transition-all duration-300 group-hover:text-foreground/90"
+          className="text-muted-foreground text-sm mb-4 line-clamp-2 transition-all duration-300 group-hover:text-foreground/90 flex-1"
           animate={{ opacity: isHovered ? 1 : 0.9 }}
           transition={{ duration: 0.3 }}
+          style={{ minHeight: 40 }}
         >
           {description}
         </motion.p>
@@ -300,7 +301,7 @@ const JobCard = ({
           )}
         </div>
 
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mt-auto pt-2">
           <motion.div
             whileHover={{ scale: 1.05 }}
             transition={{ duration: 0.2 }}
