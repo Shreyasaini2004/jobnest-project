@@ -9,7 +9,7 @@ console.log('Backend URL configured as:', backendUrl);
 const axiosInstance = axios.create({
   baseURL: backendUrl,
   withCredentials: true,
-  timeout: 10000, // 10 second timeout
+  timeout: 30000, // 10 second timeout
 });
 
 // Add request interceptor for debugging
