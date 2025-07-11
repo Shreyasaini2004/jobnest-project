@@ -7,7 +7,7 @@ import { FormField } from './FormField';
 import { Button } from './ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, FileText } from 'lucide-react';
-import { jobApi } from '@/lib/realApi';
+import axios from '@/lib/axios';
 import { useUser } from '@/contexts/UserContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import ATSScoreAnalysis from './ATSScoreAnalysis';
@@ -89,24 +89,22 @@ const JobApplicationForm: React.FC<JobApplicationFormProps> = ({
         ...applicationData
       });
       
-      // Call the API
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/applications`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          jobId: data.jobId,
-          ...applicationData
-        }),
+      // Call the API using axios
+      const response = await axios.post('/api/applications/apply', {
+        jobId: data.jobId,
+        ...applicationData
       });
 
-      if (!res.ok) throw new Error('Failed to submit application');
+      if (response.status === 201) {
+        toast({
+          title: 'Application Submitted',
+          description: 'Your application has been submitted successfully!',
+        });
 
-      toast({
-        title: 'Application Submitted',
-        description: 'Your application has been submitted successfully!',
-      });
-
-      if (onSuccess) onSuccess();
+        if (onSuccess) onSuccess();
+      } else {
+        throw new Error('Failed to submit application');
+      }
     } catch (error) {
       console.error('Error applying for job:', error);
       toast({

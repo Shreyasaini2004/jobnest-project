@@ -9,13 +9,20 @@ console.log('Backend URL configured as:', backendUrl);
 const axiosInstance = axios.create({
   baseURL: backendUrl,
   withCredentials: true,
-  timeout: 30000, // 10 second timeout
+  timeout: 30000, // 30 second timeout for production
 });
 
 // Add request interceptor for debugging
 axiosInstance.interceptors.request.use(config => {
-  // No need to manually attach token
-  console.log('Making request to:', config.baseURL + config.url);
+  // Log the full URL being called for debugging
+  const fullUrl = config.baseURL + config.url;
+  console.log('Making request to:', fullUrl);
+  
+  // Add headers for production
+  if (import.meta.env.PROD) {
+    config.headers['Content-Type'] = 'application/json';
+  }
+  
   return config;
 });
 
@@ -32,6 +39,7 @@ axiosInstance.interceptors.response.use(
     if (error.code === 'ERR_NETWORK' || error.message.includes('Network Error')) {
       console.error('Network error - API server may not be running or accessible');
       console.error('Current API URL:', backendUrl);
+      console.error('Environment:', import.meta.env.MODE);
     }
     
     if (error.response) {
@@ -71,51 +79,3 @@ axiosInstance.interceptors.response.use(
 );
 
 export default axiosInstance;
-
-
-// src/api/axios.ts (or wherever it is) -- CORRECTED
-
-// import axios from 'axios';
-
-// // Get the API base URL from environment variables, with a fallback
-// const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-
-// const apiClient = axios.create({
-//   baseURL: API_URL,
-//   withCredentials: true, // Important for cookies/sessions if you use them
-// });
-
-// // Add a request interceptor to automatically add the Authorization token
-// // This is the most important part for making authenticated requests work.
-// apiClient.interceptors.request.use(
-//   (config) => {
-//     // Get the token from localStorage on every request
-//     const token = localStorage.getItem('token');
-//     if (token) {
-//       config.headers['Authorization'] = `Bearer ${token}`;
-//     }
-//     return config;
-//   },
-//   (error) => {
-//     // This will handle errors that happen before the request is sent
-//     return Promise.reject(error);
-//   }
-// );
-
-// // We will handle the 401 logout logic inside a component
-// // instead of in this file, so we remove the problematic response interceptor.
-// // You can add a simple logger if you want.
-// apiClient.interceptors.response.use(
-//   (response) => {
-//     // Any status code that lie within the range of 2xx cause this function to trigger
-//     return response;
-//   },
-//   (error) => {
-//     // Any status codes that falls outside the range of 2xx cause this function to trigger
-//     // You can add global error logging here if you want.
-//     console.error("API Error:", error.response?.data || error.message);
-//     return Promise.reject(error);
-//   }
-// );
-
-// export default apiClient;
