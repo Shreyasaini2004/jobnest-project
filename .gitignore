@@ -22,8 +22,14 @@ yarn-error.log*
 # Environment files
 .env
 .env.*
+.env.local
+.env.development
+.env.test
+.env.production
 backend/.env
+backend/.env.*
 frontend/.env
+frontend/.env.*
 
 # Cache and temporary files
 .cache/
